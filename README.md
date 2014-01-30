@@ -24,6 +24,7 @@ Feb xth - Meeting with Professor Roumeliotis
 Feb 6th - Project descript and timeline due 
 (someone fill this section out please as best you can as I just want to get it started)
 
-Contributors (add your own name as practice with GitHub)
-=======================================================
+Contributors 
+============
 Kevin Roberts - robe0815@umn.edu
+(Add your own name as practice with GitHub, do it with the desktop client versus just pressing edit as that is only viable for documentation in my opinion)
