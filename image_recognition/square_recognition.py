@@ -1,8 +1,11 @@
+__author__ = "Kevin Roberts"
+__date__ = "02/04/2014"
+
 import numpy as np
 import cv2
 
 im = cv2.imread('blocks.jpg')
-
+# Convert to HSV, easier to isolate colors
 hsv = cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
 # Range of color
 lower_blue = np.array([105,50,50])
