@@ -19,4 +19,4 @@ Python 2.7: Obvious
 
 Numpy: Python scientific number library, OpenCV uses it
 
-OpenCV: Library for image processing, has tons of features and works well. [Examples here](h)ttp://docs.opencv.org/trunk/doc/py_tutorials/py_tutorials.html).
+OpenCV: Library for image processing, has tons of features and works well. [Examples here](http://docs.opencv.org/trunk/doc/py_tutorials/py_tutorials.html).
