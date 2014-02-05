@@ -10,6 +10,7 @@ The Wiki for this project can be found here (https://github.com/Kevin-Roberts/ba
 Contributors 
 ============
 Kevin Roberts - robe0815@umn.edu
+
 Brandon Strub - stru0232@umn.edu
 
 (Add your own name as practice with GitHub, do it with the desktop client versus just pressing edit as that is only viable for documentation in my opinion)
