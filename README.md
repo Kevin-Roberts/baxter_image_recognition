@@ -17,4 +17,5 @@ Patrick Deziel - dezie027@umn.edu
 
 Richmond Uong - uongx001@umn.edu
 
-(Add your own name as practice with GitHub, do it with the desktop client versus just pressing edit as that is only viable for documentation in my opinion)
+Sam Koehnen - koehn087@umn.edu
+
