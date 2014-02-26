@@ -8,7 +8,7 @@ from std_msgs.msg import String
 # import inspect
 from sensor_msgs.msg import Image
 
-class image_receiver(object):
+class ImageReceiver(object):
 
     def __init__(self, topic):
         self.image_sub = rospy.Subscriber(topic, Image, self.callback)
@@ -34,7 +34,7 @@ class image_receiver(object):
         
 
 def main():
-    ir = image_receiver("/cameras/right_hand_camera/image")
+    ir = ImageReceiver("/cameras/right_hand_camera/image")
     rospy.init_node("ImageReceiver", anonymous=True)
     try:
         rospy.spin()
