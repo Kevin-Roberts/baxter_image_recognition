@@ -4,20 +4,28 @@ import rospy
 import roslib
 from cv2 import cv
 from cv_bridge import CvBridge, CvBridgeError
+
+from baxter_interface.camera import CameraController
+
 from std_msgs.msg import String
 # import inspect
 from sensor_msgs.msg import Image
 
 class ImageReceiver(object):
 
-    def __init__(self, topic):
-        self.image_sub = rospy.Subscriber(topic, Image, self.callback)
+    # I should look into making a method to unsubscribe the image subscriber
+
+    def __init__(self, camera_name):
+        topic = "/cameras/" + camera_name + "/image"
+        self.camera_name = camera_name
+        self.camera_controller = CameraController(camera_name)
+        self.image_sub = rospy.Subscriber(topic, Image, self._callback)
         self.bridge = CvBridge()
         cv.NamedWindow("Image window", 1)
         self.cv_image = None
         self.raw_image = None
 
-    def callback(self, data):
+    def _callback(self, data):
         print "got here omg"
         self.raw_image = data
         try:
@@ -25,6 +33,7 @@ class ImageReceiver(object):
         except CvBridgeError, e:
             print e
 
+        # Not totally sure what this is going for but I left it for now because I assume it matters for the show image deal.
         (cols, rows) = cv.GetSize(self.cv_image)
         if cols > 60 and rows > 60:
             cv.Circle(cv_image, (50,50), 10, 255)
@@ -32,9 +41,18 @@ class ImageReceiver(object):
         cv.ShowImage("Image window", cv_image)
         cv.WaitKey(3)
         
+    def enableCamera(self):
+        # Do any custom settings first, haven't decided what they are yet
+        self.camera_controller.open()
+
+    def disableCamera(self):
+        self.camera_controller.close()
 
 def main():
-    ir = ImageReceiver("/cameras/right_hand_camera/image")
+    # Basically this is for testing
+    ir = ImageReceiver("right_hand_camera")
+
+    # need one of these per process
     rospy.init_node("ImageReceiver", anonymous=True)
     try:
         rospy.spin()
