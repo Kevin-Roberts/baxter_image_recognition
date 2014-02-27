@@ -26,7 +26,6 @@ class ImageReceiver(object):
         self.raw_image = None
 
     def _callback(self, data):
-        print "got here omg"
         self.raw_image = data
         try:
             self.cv_image = self.bridge.imgmsg_to_cv(data, "bgr8")
@@ -35,15 +34,15 @@ class ImageReceiver(object):
 
         # Not totally sure what this is going for but I left it for now because I assume it matters for the show image deal.
         (cols, rows) = cv.GetSize(self.cv_image)
-        if cols > 60 and rows > 60:
-            cv.Circle(cv_image, (50,50), 10, 255)
 
-        cv.ShowImage("Image window", cv_image)
+        cv.ShowImage("Image window", self.cv_image)
         cv.WaitKey(3)
         
     def enableCamera(self):
         # Do any custom settings first, haven't decided what they are yet
+        self.camera_controller.resolution = (1280,800)
         self.camera_controller.open()
+
 
     def disableCamera(self):
         self.camera_controller.close()
