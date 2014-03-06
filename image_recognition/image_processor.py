@@ -18,10 +18,6 @@ class ImageProcessor(object):
         else:
             self.hsv_image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
 
-    def __init__(self):
-        self.cv_image = None
-        self.hsv_image = None
-
     def setImage(self, cv_image):
         self.cv_image = cv_image
         self.hsv_image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
