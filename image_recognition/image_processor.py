@@ -11,9 +11,12 @@ COLOR_RANGES = {"BLUE":[np.array([105,50,50]), np.array([115,255,255])],
 
 class ImageProcessor(object):
 
-    def __init__(self, cv_image):
+    def __init__(self, cv_image = None):
         self.cv_image = cv_image
-        self.hsv_image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
+        if cv_image is None:
+            self.hsv_image = None
+        else:
+            self.hsv_image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
 
     def __init__(self):
         self.cv_image = None
