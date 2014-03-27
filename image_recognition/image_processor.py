@@ -1,13 +1,15 @@
 #!/usr/bin/python
 
-import numpy as np 
+import numpy as np
 import cv2
 
-COLOR_RANGES = {"BLUE":[np.array([105,50,50]), np.array([115,255,255])],
+COLOR_RANGES = {"BLUE":[np.array([80,50,50]), np.array([130,255,255])],
                 "RED":[],
                 "YELLOW":[],
                 "GREEN":[],
                 "BLACK":[] }
+
+SIZE = 1000
 
 class ImageProcessor(object):
 
@@ -36,13 +38,22 @@ class ImageProcessor(object):
         blocks = []
         for contour in contours:
             area = cv2.contourArea(contour)
-            if area > 1000:
+            if area > SIZE:
                 blocks.append(contour)
         # Draw the contours on mask just so that we can see that it worked.
-        cv2.drawContours(mask, blocks, -1, (255,0,0), 3)
+        #cv2.drawContours(mask, blocks, -1, (255,0,0), 3)
         cv2.imwrite('test.jpg',self.cv_image)
-        # Save the image for viewing.
-        cv2.imwrite('output' + color + '.jpg',mask)
+
+	# Find the corners of each found block
+	for i in range(0, len(blocks)):
+	    rect = cv2.minAreaRect(blocks[0])
+	    box = cv2.cv.BoxPoints(rect)
+	    box = np.int0(box)
+	    print "Block %d Corner Coordinates" % i
+	    print box
+	    cv2.drawContours(mask, [box], 0, (255,0,0), 2)
+        
+	cv2.imwrite('output' + color + '.jpg',mask)
 
         # Not sure if this is the exact thing I want returned but I will want something like this I'm sure....
         return (contours,hierarchy)
