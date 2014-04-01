@@ -1,6 +1,11 @@
 #!/usr/bin/python
 
 
+#To Use this script, first launch....
+# rosrun baxter_tools joint_trajectory_action_server.py (Pretty sure that is the correct name/location)
+# roslaunch move_group.launch (if this doesn't work then demo_baxter.launch should work for sure)
+# python moveit.py
+
 import rospy
 from moveit_commander import MoveGroupCommander
 from moveit_commander import RobotCommander
