@@ -3,6 +3,7 @@
 
 #To Use this script, first launch....
 # rosrun baxter_tools joint_trajectory_action_server.py (Pretty sure that is the correct name/location)
+# Open a new terminal and leave the server open.
 # roslaunch move_group.launch (if this doesn't work then demo_baxter.launch should work for sure)
 # python moveit.py
 
