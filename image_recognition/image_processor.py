@@ -3,10 +3,10 @@
 import numpy as np
 import cv2
 
-COLOR_RANGES = {"BLUE":[np.array([80,50,50]), np.array([130,255,255])],
-                "RED":[],
+COLOR_RANGES = {"BLUE":[np.array([110,50,50]), np.array([130,255,255])],
+                "RED":[np.array([0,50,50]), np.array([20,255,255])],
                 "YELLOW":[],
-                "GREEN":[],
+                "GREEN":[np.array([80,50,50]), np.arra([100,255,255])],
                 "BLACK":[] }
 
 SIZE = 1000
