@@ -11,6 +11,9 @@ COLOR_RANGES = {"BLUE":[np.array([80,50,50]), np.array([130,255,255])],
 
 SIZE = 1000
 PIXELS_PER_INCH = 15.5
+# this is for angle calculation
+HEIGHT_OF_OUR_HOME = 25.875
+GRIPPER_LENGTH = 3.875
 
 
 class ImageProcessor(object):
