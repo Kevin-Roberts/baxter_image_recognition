@@ -23,8 +23,21 @@ from baxter_core_msgs.srv import (
 
 # https://github.com/RethinkRobotics/baxter_examples/blob/master/scripts/ik_service_client.py
 # https://github.com/RethinkRobotics/baxter_interface/tree/master/src/baxter_interface
-class MoveController(object)
-
+class MoveController(object):
+    home_pose = Pose(
+                 position=Point(
+                     x=0.52598,
+                     y=0,
+                     z=0.45,
+                     ),
+                 orientation=Quaternion(
+                     x=0,
+                     y=math.pi/4,
+                     z=0,
+                     w=0,),
+               )
+                         
+    
     def __init__(self, arm):
         rospy.init_node("rsdk_ik_service_client")
         self.ns = "ExternalTools/" + arm + "/PositionKinematicsNode/IKService"
@@ -32,33 +45,21 @@ class MoveController(object)
         self.ikreq = SolvePositionIKRequest()
         self.hdr = Header(stamp=rospy.Time.now(), frame_id='base')
         self.arm = baxter_interface.Limb(arm)
+        self.arm.set_joint_position_speed(0.99)
         self.gripper = baxter_interface.Gripper(arm)
-        self.table_height = self.calc_table_height()
-
-        self.home_pose = Pose(
-                position=Point(
-                    x=0,
-                    y=0.852,
-                    z=0,
-                    ),
-                orientation=Quaternion(
-                    x=0,
-                    y=math.pi/4,
-                    z=0,
-                    w=0,),
-                )
-
+        self.table_height = 0 #self.calc_table_height()
+        print self.table_height;
 
     # I believe the center of ranges are [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0] (which I believe is x,y,z, x,y,z,w)
     def move_to_pose(self, pose):
         pose_stamped = PoseStamped(
-            header=self.hdr
+            header=self.hdr,
             pose = pose
             )
 
         self.ikreq.pose_stamp.append(pose_stamped)
         try:
-            rospy.wait_for_service(ns, 5.0)
+            rospy.wait_for_service(self.ns, 5.0)
             resp = self.iksvc(self.ikreq)
         except (rospy.ServiceException, rospy.ROSException), e:
             rospy.logerr("Service call failed: %s" % (e,))
@@ -76,7 +77,7 @@ class MoveController(object)
 
             # Has some weird 0.2 first order filter but otherwise seems like the way to go?
             # Comments in baxter_interface limb.py commit seem to claim that this way is 10 times more accurate
-            self.arm.move_to_joint_positions(self, limb_joints)
+            self.arm.move_to_joint_positions(limb_joints)
         else:
             print("Invalid Pose - No Valid Joint Solution Found")
             return -1
@@ -84,8 +85,8 @@ class MoveController(object)
 
     def move_to_home(self):
         # Might not need this part
-        if(self.checkNearTable(pose)):
-            result = self.raise_up()
+        #if(self.checkNearTable()):
+        #    result = self.raise_up()
 
         return self.move_to_pose(self.home_pose)
 
@@ -128,11 +129,11 @@ class MoveController(object)
         self.move_to_home()
         tempPose = self.home_pose
         while(self.move_to_pose(tempPose) != -1):
-            tempPose.position.z = tempPose.position.z - 0.05
-
-        tempPose.position.z = tempPose.position.z + 0.05
-        while(self.move_to_pose(tempPose) != -1):
-            tempPose.position.z = tempPose.position.z - 0.025        
+            tempPose.position.z = tempPose.position.z + 0.05
+        
+        tempPose.position.z = tempPose.position.z - 0.05
+       # while(self.move_to_pose(tempPose) != -1):
+       #     tempPose.position.z = tempPose.position.z - 0.025        
 
             # Maybe I want to check if this is the same as self.home_pose
         return tempPose.position.z

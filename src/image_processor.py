@@ -42,7 +42,7 @@ class ImageProcessor(object):
                 blocks.append(contour)
         # Draw the contours on mask just so that we can see that it worked.
         #cv2.drawContours(mask, blocks, -1, (255,0,0), 3)
-        cv2.imwrite('test.jpg',self.cv_image)
+        cv2.imwrite('test.png',self.cv_image)
 
         # Find the corners of each found block
         boxList = []
@@ -55,7 +55,7 @@ class ImageProcessor(object):
             print box
             cv2.drawContours(mask, [box], 0, (255,0,0), 2)
             
-        cv2.imwrite('output' + color + '.jpg',mask)
+        cv2.imwrite('output' + color + '.png',mask)
 
         # Not sure if this is the exact thing I want returned but I will want something like this I'm sure....
         return boxList

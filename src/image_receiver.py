@@ -21,6 +21,7 @@ class ImageReceiver(object):
         self.topic = "/cameras/" + camera_name + "/image"
         self.camera_name = camera_name
         self.camera_controller = CameraController(camera_name)
+        self.camera_controller.resolution = (960,600)
         # self.image_sub = rospy.Subscriber(topic, Image, self._callback)
         self.bridge = CvBridge()
         # cv.NamedWindow("Image window", 1)
