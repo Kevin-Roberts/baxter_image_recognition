@@ -10,6 +10,8 @@ COLOR_RANGES = {"BLUE":[np.array([80,50,50]), np.array([130,255,255])],
                 "BLACK":[] }
 
 SIZE = 1000
+PIXELS_PER_INCH = 15.5
+
 
 class ImageProcessor(object):
 
