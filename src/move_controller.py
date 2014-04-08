@@ -47,6 +47,7 @@ class MoveController(object):
         self.arm = baxter_interface.Limb(arm)
         self.arm.set_joint_position_speed(0.99)
         self.gripper = baxter_interface.Gripper(arm)
+        self.gripper.calibrate()
         self.table_height = 0 #self.calc_table_height()
         print self.table_height;
 
@@ -97,9 +98,9 @@ class MoveController(object):
         return self.move_to_pose(moveup_pose)
 
     def pick_at_pose(self, pose):
-        if(self.checkNearTable(pose)):
-            result = self.raise_up()
-
+#        if(self.checkPoseRanges(pose)):
+ #           result = self.raise_up()
+        result = 0
         if(result==0):
             result = self.move_to_pose(pose)
 

@@ -60,7 +60,7 @@ def main():
     mc = MasterController('blocksort')
     #mc.get_image()
     mc.find_blocks()
-
+    mc.rh.pick_at_pose(mc.rh.home_pose)
 #    for i in queue:
 #        move_block(queue[i])
         
