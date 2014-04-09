@@ -70,14 +70,6 @@ class MoveController(object):
         if(resp.isValid[0]):
             print("Success - Valid Joint Solution Found")
             limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
-
-            # this works for sure, but loop is not desired obviously
-            # while not rospy.is_shutdown():
-            #     self.arm.set_joint_positions(limb_joints)
-            #     rospy.sleep(0.1)
-
-            # Has some weird 0.2 first order filter but otherwise seems like the way to go?
-            # Comments in baxter_interface limb.py commit seem to claim that this way is 10 times more accurate
             self.arm.move_to_joint_positions(limb_joints)
         else:
             print("Invalid Pose - No Valid Joint Solution Found")
@@ -85,40 +77,24 @@ class MoveController(object):
         return 0
 
     def move_to_home(self):
-        # Might not need this part
-        #if(self.checkNearTable()):
-        #    result = self.raise_up()
-
         return self.move_to_pose(self.home_pose)
 
     def raise_up(self):
         moveup_pose = self.arm.endpoint_pose()
         moveup_pose.position.z = moveup.position.z + 0.15
-        # I might want to consider returning the pose here
         return self.move_to_pose(moveup_pose)
 
     def pick_at_pose(self, pose):
-#        if(self.checkPoseRanges(pose)):
- #           result = self.raise_up()
-        result = 0
-        if(result==0):
-            result = self.move_to_pose(pose)
+        result = self.move_to_pose(pose)
 
         # Potentially try these as non-blocking although I might not be able to do the error checking then 
         if(result==0):
             result = self.gripper.close(block=True)
-        if(result==None):
-            # might not even have a suction on there 
-            result = self.gripper.command_suction(block=True)
         return result
 
     def drop_at_pose(self, pose):
-        if(self.checkNearTable(pose)):
-            result = self.raise_up()
-        # Potentially try these as non-blocking although I might not be able to do the error checking then 
-        if(result==0):
-            result = self.gripper.command_suction(block=True)
-        if(result==None):
+        result = self.move_to_pose(pose)
+        if(result == 0):
             # might not even have a suction on there 
             result = self.gripper.open(block=True)
             
@@ -136,15 +112,14 @@ class MoveController(object):
        # while(self.move_to_pose(tempPose) != -1):
        #     tempPose.position.z = tempPose.position.z - 0.025        
 
-            # Maybe I want to check if this is the same as self.home_pose
         return tempPose.position.z
 
     def checkPoseRanges(self, pose):
         # this will check to make sure you don't give a position value that is too far in one direction.
-        result = self.checkNearTable()
-        return -1
+        # result = self.checkNearTable()
+        return 0
 
-    def checkNearTable(self):
+    def check_near_table(self):
         if(self.arm.endpoint_pose().position.z < self.table_height + 0.14):
             return True
         else:
