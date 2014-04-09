@@ -39,7 +39,7 @@ class MoveController(object):
                          
     
     def __init__(self, arm):
-        rospy.init_node("rsdk_ik_service_client")
+        #rospy.init_node("rsdk_ik_service_client")
         self.ns = "ExternalTools/" + arm + "/PositionKinematicsNode/IKService"
         self.iksvc = rospy.ServiceProxy(self.ns, SolvePositionIK)
         self.ikreq = SolvePositionIKRequest()
@@ -52,7 +52,7 @@ class MoveController(object):
         print self.table_height;
 
     # I believe the center of ranges are [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0] (which I believe is x,y,z, x,y,z,w)
-    def move_to_pose(self, pose):
+    def move_to_pose(self, pose, move=True):
         pose_stamped = PoseStamped(
             header=self.hdr,
             pose = pose
@@ -67,10 +67,11 @@ class MoveController(object):
             return -1
 
         # Not sure if the index can stay 0 or if it needs to be len(resp.isValid)-1
-        if(resp.isValid[0]):
+        if resp.isValid[0]:
             print("Success - Valid Joint Solution Found")
-            limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
-            self.arm.move_to_joint_positions(limb_joints)
+            if move:
+                limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
+                self.arm.move_to_joint_positions(limb_joints)
         else:
             print("Invalid Pose - No Valid Joint Solution Found")
             return -1
@@ -105,10 +106,12 @@ class MoveController(object):
     def calc_table_height(self):
         self.move_to_home()
         tempPose = self.home_pose
-        while(self.move_to_pose(tempPose) != -1):
-            tempPose.position.z = tempPose.position.z + 0.05
-        
+        self.move_to_pose(tempPose)
         tempPose.position.z = tempPose.position.z - 0.05
+        while(self.move_to_pose(tempPose,move=False) != -1):
+            tempPose.position.z = tempPose.position.z - 0.05
+        
+        tempPose.position.z = tempPose.position.z + 0.05
        # while(self.move_to_pose(tempPose) != -1):
        #     tempPose.position.z = tempPose.position.z - 0.025        
 

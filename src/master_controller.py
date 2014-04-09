@@ -8,30 +8,29 @@ from image_processor import ImageProcessor
 
 class MasterController(object):
     
-    def __init__(self, mode = None):
-        self.mode = mode;
-        if mode == 'blocksort':
-            self.ir = ImageReceiver("right_hand_camera")
-            self.il = ImageReceiver("left_hand_camera")
-            self.ih = ImageReceiver("head_camera")
-            self.ip = ImageProcessor()
-            self.rh = MoveController('right')
+    def __init__(self):
+        rospy.init_node("senior_design")
+        self.ir = ImageReceiver("right_hand_camera")
+        self.il = ImageReceiver("left_hand_camera")
+        self.ih = ImageReceiver("head_camera")
+        self.ip = ImageProcessor()
+        self.rh = MoveController('right')
 #            rospy.init_node("ImageReceiver", anonymous=True)
-            self.il.disableCamera()
-            self.ih.disableCamera()
-            self.ir.enableCamera()
-            self.blueblocklist = None
-            self.redblocklist = None
-            self.greenblocklist = None
-            self.queue = None
+        self.il.disableCamera()
+        self.ih.disableCamera()
+        self.ir.enableCamera()
+        self.blueblocklist = None
+        self.redblocklist = None
+        self.greenblocklist = None
+        self.queue = None
 
-    def get_image(self):
+    def get_home_image(self):
         self.rh.move_to_home()
         image = self.ir.getImage()
         self.ip.setImage(image)
 
     def find_blocks(self):
-        self.get_image()
+        self.get_home_image()
         self.blueblocklist = self.ip.findBlock("BLUE")
 #        self.redblocklist = self.ip.findBlock("RED")
  #       self.greenblocklist = self.ip.findBlock("GREEN")
@@ -57,14 +56,13 @@ class Block(object):
         
 
 def main():
-    mc = MasterController('blocksort')
+    monnitorQuit()
+    mc = MasterController()
     #mc.get_image()
     mc.find_blocks()
-    mc.rh.pick_at_pose(mc.rh.home_pose)
-#    for i in queue:
-#        move_block(queue[i])
-        
+    #mc.rh.pick_at_pose(mc.rh.home_pose)
 
+        
 
 if __name__ == '__main__':
     main()

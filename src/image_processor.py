@@ -3,16 +3,19 @@
 import numpy as np
 import cv2
 
-COLOR_RANGES = {"BLUE":[np.array([80,50,50]), np.array([130,255,255])],
-                "RED":[],
+
+# Perhaps we should stretch (and widen) the green and blue ranges up and down five
+# Then no values from 100-110 would be missing
+COLOR_RANGES = {"BLUE":[np.array([110,50,50]), np.array([130,255,255])],
+                "RED":[np.array([0,50,50]), np.array([20,255,255])],
                 "YELLOW":[],
-                "GREEN":[],
+                "GREEN":[np.array([80,50,50]), np.array([100,255,255])],
                 "BLACK":[] }
 
 SIZE = 1000
 PIXELS_PER_INCH = 15.5
 # this is for angle calculation
-HEIGHT_OF_OUR_HOME = 25.875
+HEIGHT_OF_OUR_HOME = 25.875      # this is with 0.45 as the z
 GRIPPER_LENGTH = 3.875
 
 
