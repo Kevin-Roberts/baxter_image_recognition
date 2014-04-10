@@ -45,10 +45,10 @@ class MoveController(object):
         self.ikreq = SolvePositionIKRequest()
         self.hdr = Header(stamp=rospy.Time.now(), frame_id='base')
         self.arm = baxter_interface.Limb(arm)
-        self.arm.set_joint_position_speed(0.99)
+        self.arm.set_joint_position_speed(0.3)
         self.gripper = baxter_interface.Gripper(arm)
         self.gripper.calibrate()
-        self.table_height = 0 #self.calc_table_height()
+        self.table_height = self.arm.endpoint_pose()['position'].z #.position.z  #self.calc_table_height()
         print self.table_height;
 
     # I believe the center of ranges are [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0] (which I believe is x,y,z, x,y,z,w)

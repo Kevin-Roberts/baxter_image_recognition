@@ -14,7 +14,7 @@ class MasterController(object):
         self.il = ImageReceiver("left_hand_camera")
         self.ih = ImageReceiver("head_camera")
         self.ip = ImageProcessor()
-        self.rh = MoveController('right')
+        self.move = MoveController('right')
 #            rospy.init_node("ImageReceiver", anonymous=True)
         self.il.disableCamera()
         self.ih.disableCamera()
@@ -25,7 +25,7 @@ class MasterController(object):
         self.queue = None
 
     def get_home_image(self):
-        self.rh.move_to_home()
+        self.move.move_to_home()
         image = self.ir.getImage()
         self.ip.setImage(image)
 
@@ -56,10 +56,14 @@ class Block(object):
         
 
 def main():
-    monnitorQuit()
     mc = MasterController()
     #mc.get_image()
     mc.find_blocks()
+    temp = mc.move.home_pose
+    temp.position.z = mc.move.table_height+0.015
+    mc.move.pick_at_pose(temp)
+
+
     #mc.rh.pick_at_pose(mc.rh.home_pose)
 
         
