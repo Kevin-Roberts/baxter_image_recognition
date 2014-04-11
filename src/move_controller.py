@@ -21,6 +21,7 @@ from baxter_core_msgs.srv import (
     )
 
 
+# Try IR Sensor by making subscriber and directly reading the subscriber data.
 # https://github.com/RethinkRobotics/baxter_examples/blob/master/scripts/ik_service_client.py
 # https://github.com/RethinkRobotics/baxter_interface/tree/master/src/baxter_interface
 class MoveController(object):
