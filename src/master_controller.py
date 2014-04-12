@@ -13,8 +13,8 @@ class MasterController(object):
         self.ir = ImageReceiver("right_hand_camera")
         self.il = ImageReceiver("left_hand_camera")
         self.ih = ImageReceiver("head_camera")
-        self.ip = ImageProcessor()
         self.move = MoveController('right')
+        self.ip = ImageProcessor(self.move.home_pose)
 #            rospy.init_node("ImageReceiver", anonymous=True)
         self.il.disableCamera()
         self.ih.disableCamera()
@@ -34,6 +34,16 @@ class MasterController(object):
         self.blueblocklist = self.ip.findBlock("BLUE")
         self.orangeblocklist = self.ip.findBlock("ORANGE")
         self.greenblocklist = self.ip.findBlock("GREEN")
+
+    def position_above_pose(self, pose):
+	z_offset = .02
+	pose.position.z += z_offset
+	self.move.move_to_pose(pose)
+	pose.position.z -= z_offset
+
+    def align_pose(self, pose, color):
+	self.ip.setImage(self.ir.getImage())
+	self.ip.setAlignedPose(pose, color)
 
     def get_block_coords(self):
         return 0
@@ -63,8 +73,10 @@ def main():
         mc.find_blocks()
         print mc.orangeblocklist[0].pose
         #mc.rh.move_to_pose(mc.blueblocklist[0].pose)
-        mc.rh.pick_at_pose(mc.orangeblocklist[0].pose)
-        mc.rh.drop_at_pose(mc.rh.home_pose)
+	mc.position_above_pose(mc.orangeblocklist[0].pose)
+	mc.align_pose(mc.orangeblocklist[0].pose, "ORANGE")
+        mc.move.pick_at_pose(mc.orangeblocklist[0].pose)
+        mc.move.drop_at_pose(mc.move.home_pose)
         #mc.rh.pick_at_pose(mc.rh.home_pose)
 
 

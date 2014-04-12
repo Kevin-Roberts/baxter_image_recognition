@@ -28,6 +28,7 @@ DEFAULT_PIXELS_PER_METER = 15.5 / 2.54 * 100
 DEFAULT_HOME_HEIGHT = 25.875 * 2.54 / 100
 #GRIPPER_LENGTH = 3.875 * 2.54 / 100
 GRIPPER_LENGTH = 4.5 * 2.54 / 100
+PIXELS_PER_METER_CLOSE = 100 / 2.54 * 100
 
 #PIXELS_PER_INCH = 15.5
 # this is for angle calculation
@@ -56,6 +57,9 @@ class ImageProcessor(object):
             self.hsv_image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
 
             self.im_width, self.im_height = cv2.cv.GetSize(cv2.cv.fromarray(cv_image))
+
+    def writeImage(self):
+	cv2.imwrite('test.png', self.cv_image)
 
     def boxCordsToPose(self, box):
         image_x = (box[0][0] + box[2][0]) / 2
@@ -96,6 +100,43 @@ class ImageProcessor(object):
                             z = 0,
                             w = 0))
 
+    def setAlignedPose(self, pose, color):
+	c_range = COLOR_RANGES.get(color,None)
+
+	if c_range is None:
+	    print "Invalied Color"
+	    return None
+
+	mask = cv2.inRange(self.hsv_image, c_range[0], c_range[1])
+	contours, heirarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+
+	blocks = []
+	for contour in contours:
+	    area = cv2.contourArea(contour)
+	    if area > 100:
+		blocks.append(contour)
+
+	min_offset_dist = 10000
+	min_x_offset = 100
+	min_y_offset = 100
+	for i in range(0, len(blocks)):
+	    rect = cv2.minAreaRect(blocks[i])
+	    box = cv2.cv.BoxPoints(rect)
+	    box = np.int0(box)
+	    cv2.drawContours(self.cv_image, [box], 0, (255,0,0), 2)
+            x_offset = ((box[0][0] + box[2][0]) / 2) - self.im_height / 2
+            y_offset = ((box[0][1] + box[2][1]) / 2) - self.im_width / 2
+	    offset_dist = math.sqrt(x_offset**2 + y_offset**2)
+	    if offset_dist < min_offset_dist:
+		min_offset_dist = offset_dist
+		min_x_offset = x_offset
+		min_y_offset = y_offset
+
+	self.writeImage()
+
+	pose.position.x -= min_x_offset / PIXELS_PER_METER_CLOSE - .0254 * 1.0
+	pose.position.y -= min_y_offset / PIXELS_PER_METER_CLOSE - .0254 * 1.25
+
     def findBlock(self, color):
         c_range = COLOR_RANGES.get(color,None)
 
@@ -119,7 +160,7 @@ class ImageProcessor(object):
                 blocks.append(contour)
 
 
-        cv2.imwrite('test.png', self.cv_image)
+        #cv2.imwrite('test.png', self.cv_image)
 
         # get a list of blocks
         # box has the corner coordinates of each block in pixels
@@ -131,9 +172,10 @@ class ImageProcessor(object):
 
             blockList.append(Block(color, self.boxCordsToPose(box)));
 
-            cv2.drawContours(mask, [box], 0, (255,0,0), 2)
+            cv2.drawContours(self.cv_image, [box], 0, (255,0,0), 2)
 
         # Not sure if this is the exact thing I want returned but I will want something like this I'm sure....
+        cv2.imwrite('test.png', self.cv_image)
         cv2.imwrite('output' + color + '.png', mask)
 
         return blockList
