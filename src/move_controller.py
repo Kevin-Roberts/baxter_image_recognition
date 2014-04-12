@@ -59,7 +59,7 @@ class MoveController(object):
             pose = pose
             )
 
-        self.ikreq.pose_stamp.append(pose_stamped)
+        self.ikreq.pose_stamp = [pose_stamped]
         try:
             rospy.wait_for_service(self.ns, 5.0)
             resp = self.iksvc(self.ikreq)
