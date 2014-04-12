@@ -20,7 +20,7 @@ class MasterController(object):
         self.ih.disableCamera()
         self.ir.enableCamera()
         self.blueblocklist = None
-        self.redblocklist = None
+        self.orangeblocklist = None
         self.greenblocklist = None
         self.queue = None
 
@@ -32,8 +32,8 @@ class MasterController(object):
     def find_blocks(self):
         self.get_home_image()
         self.blueblocklist = self.ip.findBlock("BLUE")
-#        self.redblocklist = self.ip.findBlock("RED")
- #       self.greenblocklist = self.ip.findBlock("GREEN")
+        self.orangeblocklist = self.ip.findBlock("ORANGE")
+        self.greenblocklist = self.ip.findBlock("GREEN")
 
     def get_block_coords(self):
         return 0
@@ -57,11 +57,15 @@ class Block(object):
 
 def main():
     mc = MasterController()
+
     #mc.get_image()
-    mc.find_blocks()
-    temp = mc.move.home_pose
-    temp.position.z = mc.move.table_height+0.015
-    mc.move.pick_at_pose(temp)
+    while True:
+        mc.find_blocks()
+        print mc.orangeblocklist[0].pose
+        #mc.rh.move_to_pose(mc.blueblocklist[0].pose)
+        mc.rh.pick_at_pose(mc.orangeblocklist[0].pose)
+        mc.rh.drop_at_pose(mc.rh.home_pose)
+        #mc.rh.pick_at_pose(mc.rh.home_pose)
 
 
     #mc.rh.pick_at_pose(mc.rh.home_pose)
