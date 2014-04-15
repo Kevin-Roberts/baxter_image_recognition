@@ -15,20 +15,21 @@ from geometry_msgs.msg import (
 
 from std_msgs.msg import Header
 
+
+from sensor_msgs.msg import Range
+
 from baxter_core_msgs.srv import (
     SolvePositionIK,
     SolvePositionIKRequest,
     )
 
-
-# Try IR Sensor by making subscriber and directly reading the subscriber data.
 # https://github.com/RethinkRobotics/baxter_examples/blob/master/scripts/ik_service_client.py
 # https://github.com/RethinkRobotics/baxter_interface/tree/master/src/baxter_interface
 class MoveController(object):
     home_pose = Pose(
                  position=Point(
                      x=0.52598,
-                     y=0,
+                     y=-0.3365,
                      z=0.45,
                      ),
                  orientation=Quaternion(
@@ -38,9 +39,7 @@ class MoveController(object):
                      w=0,),
                )
                          
-    
     def __init__(self, arm):
-        #rospy.init_node("rsdk_ik_service_client")
         self.ns = "ExternalTools/" + arm + "/PositionKinematicsNode/IKService"
         self.iksvc = rospy.ServiceProxy(self.ns, SolvePositionIK)
         self.ikreq = SolvePositionIKRequest()
@@ -49,8 +48,9 @@ class MoveController(object):
         self.arm.set_joint_position_speed(0.3)
         self.gripper = baxter_interface.Gripper(arm)
         self.gripper.calibrate()
-        self.table_height = self.arm.endpoint_pose()['position'].z #.position.z  #self.calc_table_height()
-        print self.table_height;
+        self.table_height = self.arm.endpoint_pose()['position'].z
+        self.infared_topic = "/robot/range/" + arm + "_hand_range/state"
+        self.infared_sub = None
 
     # I believe the center of ranges are [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0] (which I believe is x,y,z, x,y,z,w)
     def move_to_pose(self, pose, move=True):
@@ -67,7 +67,6 @@ class MoveController(object):
             rospy.logerr("Service call failed: %s" % (e,))
             return -1
 
-        # Not sure if the index can stay 0 or if it needs to be len(resp.isValid)-1
         if resp.isValid[0]:
             print("Success - Valid Joint Solution Found")
             if move:
@@ -89,7 +88,6 @@ class MoveController(object):
     def pick_at_pose(self, pose):
         result = self.move_to_pose(pose)
 
-        # Potentially try these as non-blocking although I might not be able to do the error checking then 
         if(result==0):
             result = self.gripper.close(block=True)
         return result
@@ -97,7 +95,6 @@ class MoveController(object):
     def drop_at_pose(self, pose):
         result = self.move_to_pose(pose)
         if(result == 0):
-            # might not even have a suction on there 
             result = self.gripper.open(block=True)
             
         return result
@@ -113,10 +110,22 @@ class MoveController(object):
             tempPose.position.z = tempPose.position.z - 0.05
         
         tempPose.position.z = tempPose.position.z + 0.05
-       # while(self.move_to_pose(tempPose) != -1):
-       #     tempPose.position.z = tempPose.position.z - 0.025        
 
         return tempPose.position.z
+
+    def getInfared(self):
+        self.table_height = None
+        self.infared_sub = rospy.Subscriber(self.infared_topic, Range, self._ir_callback)
+        while self.table_height is None:
+            continue
+        return self.table_height
+
+    def _ir_callback(self, data):
+        self.table_height = data.range
+        #print data.range
+        #print data.min_range
+        #print data.max_range
+        self.infared_sub.unregister()
 
     def checkPoseRanges(self, pose):
         # this will check to make sure you don't give a position value that is too far in one direction.
