@@ -60,51 +60,51 @@ class MasterController(object):
 
     def are_blocks_near(self, block):
         xthresh = 0
-        ythresh = .064 #~2.5 inches
+        ythresh = .074 #~3 inches
         xpose = block.pose.position.x
         ypose = block.pose.position.y
         isclose = False
         
-        print "Current block:________"
-        print block.pose.position
+        #print "Current block:________" #debug code
+        #print block.pose.position      #debug code
 
         #check for close blue blocks
         for block2 in self.blueblocklist:
-            print "Blue block at:"
-            print block2.pose.position
+        #    print "Blue block at:"     #debug code
+        #    print block2.pose.position #debug code
             if (xpose != block2.pose.position.x) and (ypose != block2.pose.position.y):
                 if (math.fabs(xpose - block2.pose.position.x) < xthresh):
                     print "Block at "
                     print block.pose
-                    print "is close to green block in the y direction."
-                    isclose = True
-                if (math.fabs(ypose - self.blueblocklist[i].pose.position.y) < ythresh):
-                    print "Block at "
-                    print block.pose
-                    print "is close to green block in the y direction."
-                    isclose = True
-
-        #check for close orange blocks
-        for block2 in self.orangeblocklist:
-            print "Orange block at:"
-            print block2.pose.position
-            if (xpose != block2.pose.position.x) and (ypose != block2.pose.position.y):
-                if (math.fabs(xpose - block2.pose.position.x) < xthresh):
-                    print "Block at "
-                    print block.pose
-                    print "is close to green block in the y direction."
+                    print "is close to blue block in the y direction."
                     isclose = True
                 if (math.fabs(ypose - block2.pose.position.y) < ythresh):
                     print "Block at "
                     print block.pose
-                    print "is close to green block in the y direction."
+                    print "is close to blue block in the y direction."
+                    isclose = True
+
+        #check for close orange blocks
+        for block2 in self.orangeblocklist:
+        #    print "Orange block at:"   #debug code
+        #    print block2.pose.position #debug code
+            if (xpose != block2.pose.position.x) and (ypose != block2.pose.position.y):
+                if (math.fabs(xpose - block2.pose.position.x) < xthresh):
+                    print "Block at "
+                    print block.pose
+                    print "is close to orange block in the y direction."
+                    isclose = True
+                if (math.fabs(ypose - block2.pose.position.y) < ythresh):
+                    print "Block at "
+                    print block.pose
+                    print "is close to orange block in the y direction."
                     isclose = True
 
 
         #check for close blue blocks
         for i in self.greenblocklist:
-            print "Green block at:"
-            print block2.pose.position
+        #    print "Green block at:"    #debug code
+        #    print block2.pose.position #debug code
             if (xpose != block2.pose.position.x) and (ypose != block2.pose.position.y):
                 if (math.fabs(xpose - block2.pose.position.x) < xthresh):
                     print "Block at "
@@ -136,8 +136,6 @@ def main():
  #       mc.move.pick_at_pose(mc.orangeblocklist[0].pose)
  #       mc.move.drop_at_pose(mc.move.home_pose)
         #mc.rh.pick_at_pose(mc.rh.home_pose)
-        print "position:"
-        print mc.orangeblocklist[0].pose.position.x
         if mc.are_blocks_near(mc.orangeblocklist[0]):
             print "block near"
         break
