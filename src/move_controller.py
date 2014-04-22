@@ -102,16 +102,27 @@ class MoveController(object):
 
     # I wouldn't be surprised if this needs some work and possibly a whole new implementation
     def calc_table_height(self):
-        self.move_to_home()
-        tempPose = self.home_pose
-        self.move_to_pose(tempPose)
-        tempPose.position.z = tempPose.position.z - 0.05
-        while(self.move_to_pose(tempPose,move=False) != -1):
-            tempPose.position.z = tempPose.position.z - 0.05
-        
-        tempPose.position.z = tempPose.position.z + 0.05
+        tempPose = Pose(
+                 position=Point(
+                     x=0.52598,
+                     y=-0.3365,
+                     z=0.45,
+                     ),
+                 orientation=Quaternion(
+                     x=0,
+                     y=math.pi/4,
+                     z=0,
+                     w=0,),
+               )
 
-        return tempPose.position.z
+        self.move_to_pose(tempPose)
+        while self.getInfared() is False:
+            tempPose.position.z = tempPose.position.z - 0.2
+            self.move_to_pose(tempPose)
+        
+        self.table_height += (tempPose.home_pose - tempPose.position.z)
+
+        return self.table_height
 
     def getInfared(self):
         self.table_height = None
@@ -121,7 +132,10 @@ class MoveController(object):
         return self.table_height
 
     def _ir_callback(self, data):
-        self.table_height = data.range
+        if data.range > data.min_range and data.range < data.max_range:
+            self.table_height = data.range
+        else:
+            self.table_height = False
         #print data.range
         #print data.min_range
         #print data.max_range
