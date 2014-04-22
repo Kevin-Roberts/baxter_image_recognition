@@ -11,15 +11,14 @@ class MasterController(object):
     
     def __init__(self):
         rospy.init_node("senior_design")
-        self.ir = ImageReceiver("right_hand_camera")
-        self.il = ImageReceiver("left_hand_camera")
-        self.ih = ImageReceiver("head_camera")
+        self.right_camera = ImageReceiver("right_hand_camera")
+        self.left_camera = ImageReceiver("left_hand_camera")
+        self.head_camera = ImageReceiver("head_camera")
         self.move = MoveController('right')
-        self.ip = ImageProcessor(self.move.home_pose)
-#            rospy.init_node("ImageReceiver", anonymous=True)
-        self.il.disableCamera()
-        self.ih.disableCamera()
-        self.ir.enableCamera()
+        self.image_processor = ImageProcessor(self.move.home_pose)
+        self.left_camera.disableCamera()
+        self.head_camera.disableCamera()
+        self.right_camera.enableCamera()
         self.blueblocklist = None
         self.orangeblocklist = None
         self.greenblocklist = None
@@ -27,14 +26,14 @@ class MasterController(object):
 
     def get_home_image(self):
         self.move.move_to_home()
-        image = self.ir.getImage()
-        self.ip.setImage(image)
+        image = self.right_camera.getImage()
+        self.image_processor.setImage(image)
 
     def find_blocks(self):
         self.get_home_image()
-        self.blueblocklist = self.ip.findBlock("BLUE")
-        self.orangeblocklist = self.ip.findBlock("ORANGE")
-        self.greenblocklist = self.ip.findBlock("GREEN")
+        self.blueblocklist = self.image_processor.findBlock("BLUE")
+        self.orangeblocklist = self.image_processor.findBlock("ORANGE")
+        self.greenblocklist = self.image_processor.findBlock("GREEN")
 
     def position_above_pose(self, pose):
         z_offset = .02
@@ -43,8 +42,8 @@ class MasterController(object):
         pose.position.z -= z_offset
 
     def align_pose(self, pose, color):
-	self.ip.setImage(self.ir.getImage())
-	self.ip.setAlignedPose(pose, color)
+        self.image_processor.setImage(self.right_camera.getImage())
+        self.image_processor.setAlignedPose(pose, color)
 
     def get_block_coords(self):
         return 0
@@ -143,6 +142,13 @@ def main():
     #mc.rh.pick_at_pose(mc.rh.home_pose)
 
         
+def ktest():
+    master = MasterController()
+    while True:
+        master.find_blocks()
+        tpose = getBlockPose()
+
+
 
 if __name__ == '__main__':
     main()

@@ -48,9 +48,10 @@ class MoveController(object):
         self.arm.set_joint_position_speed(0.3)
         self.gripper = baxter_interface.Gripper(arm)
         self.gripper.calibrate()
-        self.table_height = self.arm.endpoint_pose()['position'].z
-        self.infared_topic = "/robot/range/" + arm + "_hand_range/state"
-        self.infared_sub = None
+        self.table_height = None
+        self.infrared_topic = "/robot/range/" + arm + "_hand_range/state"
+        self.infrared_sub = None
+        self.update_table_height()
 
     # I believe the center of ranges are [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0] (which I believe is x,y,z, x,y,z,w)
     def move_to_pose(self, pose, move=True):
@@ -101,7 +102,7 @@ class MoveController(object):
 
 
     # I wouldn't be surprised if this needs some work and possibly a whole new implementation
-    def calc_table_height(self):
+    def update_table_height(self):
         tempPose = Pose(
                  position=Point(
                      x=0.52598,
@@ -116,17 +117,16 @@ class MoveController(object):
                )
 
         self.move_to_pose(tempPose)
-        while self.getInfared() is False:
+        while self.getInfrared() is False:
             tempPose.position.z = tempPose.position.z - 0.2
             self.move_to_pose(tempPose)
         
-        self.table_height += (tempPose.home_pose - tempPose.position.z)
+        # Get infrared sets self.table_height to the infrared distance, add drop distance
+        self.table_height += (self.home_pose.position.z - tempPose.position.z)
 
-        return self.table_height
-
-    def getInfared(self):
+    def getInfrared(self):
         self.table_height = None
-        self.infared_sub = rospy.Subscriber(self.infared_topic, Range, self._ir_callback)
+        self.infrared_sub = rospy.Subscriber(self.infrared_topic, Range, self._ir_callback)
         while self.table_height is None:
             continue
         return self.table_height
@@ -136,10 +136,7 @@ class MoveController(object):
             self.table_height = data.range
         else:
             self.table_height = False
-        #print data.range
-        #print data.min_range
-        #print data.max_range
-        self.infared_sub.unregister()
+        self.infrared_sub.unregister()
 
     def checkPoseRanges(self, pose):
         # this will check to make sure you don't give a position value that is too far in one direction.
