@@ -51,7 +51,7 @@ class MasterController(object):
             npzfile = np.load("config.npz")
             ret = (npzfile['table_height'], npzfile['mtx'], npzfile['dist'], npzfile['newcameramtx'], npzfile['roi'])
         except IOError, e:
-            print e.errno
+            print "Config file not found, run with --config parameter"
             print e
             ret = (None, None, None, None, None)
 
