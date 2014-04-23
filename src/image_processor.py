@@ -164,7 +164,7 @@ class ImageProcessor(object):
         for contour in contours:
             area = cv2.contourArea(contour)
             if area > 100:
-            blocks.append(contour)
+                blocks.append(contour)
 
         min_offset_dist = 10000
         min_x_offset = 100
@@ -187,7 +187,9 @@ class ImageProcessor(object):
         pose.position.x -= min_x_offset / PIXELS_PER_METER_CLOSE - .0254 * 1.0
         pose.position.y -= min_y_offset / PIXELS_PER_METER_CLOSE - .0254 * 1.25
 
-    def findBlock(self, color, pic_pose = self.home_pose):
+    def findBlock(self, color, pic_pose = None):
+        if pic_pose is None:
+            pic_pose = self.home_pose
         c_range = COLOR_RANGES.get(color,None)
 
         if c_range is None:

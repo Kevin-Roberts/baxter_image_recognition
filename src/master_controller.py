@@ -47,8 +47,15 @@ class MasterController(object):
 
 
     def getConfig(self):
-        npzfile = np.load("config.npz")
-        return (npzfile['table_height'], npzfile['mtx'], npzfile['dist'], npzfile['newcameramtx'], npzfile['roi'])
+        try:
+            npzfile = np.load("config.npz")
+            ret = (npzfile['table_height'], npzfile['mtx'], npzfile['dist'], npzfile['newcameramtx'], npzfile['roi'])
+        except IOError, e:
+            print e.errno
+            print e
+            ret = (None, None, None, None, None)
+
+        return ret
 
     def get_home_image(self):
         self.move.move_to_home()
