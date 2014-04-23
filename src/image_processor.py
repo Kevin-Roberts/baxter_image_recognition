@@ -36,17 +36,74 @@ PIXELS_PER_METER_CLOSE = 100 / 2.54 * 100
 #GRIPPER_LENGTH = 3.875
 
 class ImageProcessor(object):
-
-    def __init__(self, home_pose, home_height = DEFAULT_HOME_HEIGHT, cv_image = None):
+    def __init__(self, home_pose, table_height, mtx, dist, newcameramtx, roi, cv_image = None):
         self.setImage(cv_image)
 
         self.home_pose = home_pose
         self.home_height = home_height
+        if table_height is None:
+            self.home_height = DEFAULT_HOME_HEIGHT
+            self.table_height = home_pose.position.z - DEFAULT_HOME_HEIGHT
+        else:
+            self.table_height = table_height
+            self.home_height = home_pose.position.z - table_height
 
-        self.table_z = home_pose.position.z - home_height
         self.pixels_per_meter = DEFAULT_HOME_HEIGHT / home_height * DEFAULT_PIXELS_PER_METER
+        self.mtx = mtx
+        self.dist = dist
+        self.newcameramtx = newcameramtx
+        self.roi = roi
 
-    def setImage(self, cv_image):
+
+    def calibrateCamera(self):
+        # Set the chessboard image as self.cv_image prior to calling this. 
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+        # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
+        objp = np.zeros((6*7,3), np.float32)
+        objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
+
+        # Arrays to store object points and image points from all the images.
+        objpoints = [] # 3d point in real world space
+        imgpoints = [] # 2d points in image plane.
+
+        gray = cv2.cvtColor(self.cv_image,cv2.COLOR_BGR2GRAY)
+
+        # Find the chess board corners
+        ret, corners = cv2.findChessboardCorners(gray, (7,6),None)
+
+        # If found, add object points, image points (after refining them)
+        if ret == True:
+            objpoints.append(objp)
+
+            corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
+            imgpoints.append(corners2)
+
+            # Draw the corners, will eventually get rid of this
+            cv2.drawChessboardCorners(self.cv_image, (7,6), corners2,ret)
+            self.writeImage()
+        else:
+            print "Pattern Not found! Skipping Camera Calibration"
+            return False
+
+        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
+
+        h,  w = self.cv_image.shape[:2]
+        newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
+
+        return (mtx, dist, newcameramtx, roi)
+
+
+    def undistortImage(self, cv_image):
+        # undistort
+        dst = cv2.undistort(cv_image, mtx, dist, None, newcameramtx)
+
+        # crop the image
+        x,y,w,h = roi
+        dst = dst[y:y+h, x:x+w]
+        cv2.imwrite('calibresult.png',dst)  
+        return dst
+
+    def setImage(self, cv_image, undistort=True):
         if cv_image is None:
             self.hsv_image = None
             self.cv_image = None
@@ -54,24 +111,19 @@ class ImageProcessor(object):
             self.im_width = 0
             self.im_height = 0
         else:
-            self.cv_image = cv_image
-            self.hsv_image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
+            if undistort:
+                self.cv_image = self.undistortImage(cv_image)
+            else:
+                self.cv_image = cv_image
 
-            self.im_width, self.im_height = cv2.cv.GetSize(cv2.cv.fromarray(cv_image))
+            self.hsv_image = cv2.cvtColor(self.cv_image,cv2.COLOR_BGR2HSV)
+
+            self.im_width, self.im_height = cv2.cv.GetSize(cv2.cv.fromarray(self.cv_image))  
 
     def boxCordsToPose(self, box):
         image_x = (box[0][0] + box[2][0]) / 2
         image_y = (box[0][1] + box[2][1]) / 2
-        '''
-        pose = copy.deepcopy(self.home_pose);
-        pose.position.x = self.home_pose.position.x - (image_x - self.im_width/2) / self.pixels_per_meter
-        pose.position.y = self.home_pose.position.y - (image_y - self.im_height/2) / self.pixels_per_meter
-        pose.position.z = self.home_pose.position.z - self.home_height + GRIPPER_LENGTH
 
-        print self.home_pose
-
-        return pose
-        '''
         print image_x
         print image_y
 
@@ -122,8 +174,8 @@ class ImageProcessor(object):
             box = cv2.cv.BoxPoints(rect)
             box = np.int0(box)
             cv2.drawContours(self.cv_image, [box], 0, (255,0,0), 2)
-                x_offset = ((box[0][0] + box[2][0]) / 2) - self.im_height / 2
-                y_offset = ((box[0][1] + box[2][1]) / 2) - self.im_width / 2
+            x_offset = ((box[0][0] + box[2][0]) / 2) - self.im_height / 2
+            y_offset = ((box[0][1] + box[2][1]) / 2) - self.im_width / 2
             offset_dist = math.sqrt(x_offset**2 + y_offset**2)
             if offset_dist < min_offset_dist:
                 min_offset_dist = offset_dist
@@ -176,28 +228,13 @@ class ImageProcessor(object):
     def getBlockPose(self, pic_pose, box):
         image_x = (box[0][0] + box[2][0]) / 2
         image_y = (box[0][1] + box[2][1]) / 2
-        pixels_per_meter = DEFAULT_HOME_HEIGHT / (pic_pose.position.z - self.table_z) * DEFAULT_PIXELS_PER_METER
-        
-        # pose = copy.deepcopy(self.home_pose);
-
-        print image_x
-        print image_y
-
-        print self.im_height
-        print self.im_width
-
-        print "\n"
-
-        print image_x - self.im_width/2
-        print pixels_per_meter
-
-        print "\n"
+        pixels_per_meter = DEFAULT_HOME_HEIGHT / (pic_pose.position.z - self.table_height) * DEFAULT_PIXELS_PER_METER
 
         newPose = Pose(
                 position = Point(
                             x = pic_pose.position.x - (image_y - self.im_height/2) / pixels_per_meter + .0254 * 1.0,
                             y = pic_pose.position.y - (image_x - self.im_width/2) / pixels_per_meter + .0254 * 1.25,
-                            z = self.table_z + GRIPPER_LENGTH),
+                            z = self.table_height + GRIPPER_LENGTH),
                 orientation = Quaternion(
                             x = 0,
                             y = math.pi/4,
@@ -205,5 +242,9 @@ class ImageProcessor(object):
                             w = 0))  
         return newPose      
 
-    def writeImage(self):
-        cv2.imwrite('test.png', self.cv_image)
+    def writeImage(self, img=None, fname=None):
+        if fname is None:
+            fname = 'test.png'
+        if img is None:
+            img = self.cv_image
+        cv2.imwrite(fname, img)

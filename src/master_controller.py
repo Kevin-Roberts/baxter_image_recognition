@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
+import sys
 import rospy
 import math
+import numpy as np
 from move_controller import MoveController
 from image_receiver import ImageReceiver
 from image_processor import ImageProcessor
@@ -9,13 +11,18 @@ from block import Block
 
 class MasterController(object):
     
-    def __init__(self):
+    def __init__(self, setconfig=False):
+        if setconfig is False:
+            table_height, mtx, dist, newcameramtx, roi = self.getConfig()
+        else:
+            table_height, mtx, dist, newcameramtx, roi = None, None, None, None, None
+
         rospy.init_node("senior_design")
         self.right_camera = ImageReceiver("right_hand_camera")
         self.left_camera = ImageReceiver("left_hand_camera")
         self.head_camera = ImageReceiver("head_camera")
         self.move = MoveController('right')
-        self.image_processor = ImageProcessor(self.move.home_pose)
+        self.image_processor = ImageProcessor(self.move.home_pose, table_height, mtx, dist, newcameramtx, roi)
         self.left_camera.disableCamera()
         self.head_camera.disableCamera()
         self.right_camera.enableCamera()
@@ -23,6 +30,25 @@ class MasterController(object):
         self.orangeblocklist = None
         self.greenblocklist = None
         self.queue = None
+
+        if setconfig:
+            self.setConfig()
+
+
+    def setConfig(self):
+        self.move.update_table_height()
+        table_height = self.move.table_height
+        self.move.move_to_home()
+        image = self.right_camera.getImage()
+        self.right_camera.setImage(image, undistort=False)
+        mtx, dist, newcameramtx, roi = self.right_camera.calibrateCamera()
+        # Might have to put table_height into an array (i.e. table_height=[table_height]) or even nparray or write it without savez not certain
+        np.savez("config.npz", table_height=table_height, mtx=mtx, dist=dist, newcameramtx=newcameramtx, roi=roi)
+
+
+    def getConfig(self):
+        npzfile = np.load("config.npz")
+        return (npzfile['table_height'], npzfile['mtx'], npzfile['dist'], npzfile['newcameramtx'], npzfile['roi'])
 
     def get_home_image(self):
         self.move.move_to_home()
@@ -122,9 +148,15 @@ class MasterController(object):
         
 
 def main():
-    mc = MasterController()
+    
 
-    #mc.get_image()
+    if len(sys.argv) > 1:
+        mc = MasterController(setconfig = True)
+        print "Config complete"
+        return True
+    else:
+        mc = MasterController()
+
     while True:
         mc.find_blocks()
         print "pose:"

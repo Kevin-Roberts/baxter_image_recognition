@@ -51,7 +51,6 @@ class MoveController(object):
         self.table_height = None
         self.infrared_topic = "/robot/range/" + arm + "_hand_range/state"
         self.infrared_sub = None
-        self.update_table_height()
 
     # I believe the center of ranges are [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0] (which I believe is x,y,z, x,y,z,w)
     def move_to_pose(self, pose, move=True):
