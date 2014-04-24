@@ -8,12 +8,12 @@ import copy
 
 from block import Block
 
-from geometry_msgs.msg import (
-    PoseStamped,
-    Pose,
-    Point,
-    Quaternion
-)
+# from geometry_msgs.msg import (
+#     PoseStamped,
+#     Pose,
+#     Point,
+#     Quaternion
+# )
 
 
 # Perhaps we should stretch (and widen) the green and blue ranges up and down five
@@ -36,56 +36,57 @@ PIXELS_PER_METER_CLOSE = 100 / 2.54 * 100
 #GRIPPER_LENGTH = 3.875
 
 class ImageProcessor(object):
-    def __init__(self, home_pose, table_height, mtx, dist, newcameramtx, roi, cv_image = None):
+    def __init__(self, home_pose, camera_matrix, distortion, table_height = None, cv_image = None):
         self.setImage(cv_image)
 
         self.home_pose = home_pose
-        self.home_height = home_height
         if table_height is None:
             self.home_height = DEFAULT_HOME_HEIGHT
             self.table_height = home_pose.position.z - DEFAULT_HOME_HEIGHT
         else:
             self.table_height = table_height
             self.home_height = home_pose.position.z - table_height
+        self.home_height = DEFAULT_HOME_HEIGHT
+        self.pixels_per_meter = DEFAULT_HOME_HEIGHT / self.home_height * DEFAULT_PIXELS_PER_METER
+        # self.mtx = mtx
+        # self.dist = dist
+        # self.newcameramtx = newcameramtx
+        # self.roi = roi
 
-        self.pixels_per_meter = DEFAULT_HOME_HEIGHT / home_height * DEFAULT_PIXELS_PER_METER
-        self.mtx = mtx
-        self.dist = dist
-        self.newcameramtx = newcameramtx
-        self.roi = roi
 
-
-    def calibrateCamera(self):
+    def getCorners(self, dimensions):
         # Set the chessboard image as self.cv_image prior to calling this. 
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
         # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-        objp = np.zeros((6*7,3), np.float32)
-        objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
+        objp = np.zeros((dimensions[0]*dimensions[1],3), np.float32)
+        objp[:,:2] = np.mgrid[0:dimensions[0],0:dimensions[1]].T.reshape(-1,2)
 
         # Arrays to store object points and image points from all the images.
         objpoints = [] # 3d point in real world space
         imgpoints = [] # 2d points in image plane.
 
         gray = cv2.cvtColor(self.cv_image,cv2.COLOR_BGR2GRAY)
-
+        self.writeImage(gray, "test2.png")
         # Find the chess board corners
-        ret, corners = cv2.findChessboardCorners(gray, (7,6),None)
+        ret, corners = cv2.findChessboardCorners(gray, (dimensions[0],dimensions[1]), flags = cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_NORMALIZE_IMAGE + cv2.CALIB_CB_FAST_CHECK)
 
         # If found, add object points, image points (after refining them)
         if ret == True:
-            objpoints.append(objp)
 
-            corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
-            imgpoints.append(corners2)
+            cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
+
 
             # Draw the corners, will eventually get rid of this
-            cv2.drawChessboardCorners(self.cv_image, (7,6), corners2,ret)
+            cv2.drawChessboardCorners(self.cv_image, (dimensions[0],dimensions[1]), corners,ret)
             self.writeImage()
         else:
             print "Pattern Not found! Skipping Camera Calibration"
             return False
 
-        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
+        return (objp,corners, gray.shape[::-1])
+
+    def calibrateCamera(self, objpoints, imgpoints, dim):
+        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, dim,None,None)
 
         h,  w = self.cv_image.shape[:2]
         newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
@@ -95,11 +96,13 @@ class ImageProcessor(object):
 
     def undistortImage(self, cv_image):
         # undistort
-        dst = cv2.undistort(cv_image, mtx, dist, None, newcameramtx)
+        h,  w = cv_image.shape[:2]
+        newcameramtx, roi=cv2.getOptimalNewCameraMatrix(self.camera_matrix,self.distortion,(w,h),1,(w,h))
+        dst = cv2.undistort(cv_image, self.camera_matrix, self.distortion, None, newcameramtx)
 
-        # crop the image
-        x,y,w,h = roi
-        dst = dst[y:y+h, x:x+w]
+        # crop the image, I could get roi from camera intrinsics or from cv2.getOptimalNewCameraMatrix. Think its not needed though?
+        # x,y,w,h = roi
+        # dst = dst[y:y+h, x:x+w]
         cv2.imwrite('calibresult.png',dst)  
         return dst
 
@@ -250,3 +253,16 @@ class ImageProcessor(object):
         if img is None:
             img = self.cv_image
         cv2.imwrite(fname, img)
+
+
+def ktest():
+    # need to remove table_height / home_height calculation for this to work
+    ip = ImageProcessor(None, None, None)
+    ip.setImage(cv2.imread("calib_radial.jpg"), undistort=False)
+    res = ip.getCorners(dimensions = (7,6))
+    if res:
+        print ip.calibrateCamera([res[0]], [res[1]], res[2])
+
+
+if __name__ == "__main__":
+    ktest()

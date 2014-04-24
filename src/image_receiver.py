@@ -11,50 +11,54 @@ from baxter_interface.camera import CameraController
 
 from std_msgs.msg import String
 # import inspect
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CameraInfo
 
 class ImageReceiver(object):
 
     # I should look into making a method to unsubscribe the image subscriber
 
     def __init__(self, camera_name):
-        self.topic = "/cameras/" + camera_name + "/image"
         self.camera_name = camera_name
         self.camera_controller = CameraController(camera_name)
         self.camera_controller.resolution = (960,600)
+        self.image_topic = "/cameras/" + camera_name + "/image"
         self.image_sub = None
         self.bridge = CvBridge()
-        # cv.NamedWindow("Image window", 1)
+        self.intrinsics_topic = "/cameras/" + camera_name + "/camera_info"
+        self.intrinsics_sub = None
+
         self.cv_image = None
         self.raw_image = None
 
-    def _callback(self, data):
+
+    def _img_callback(self, data):
         self.raw_image = data
         try:
             self.cv_image = np.asarray(self.bridge.imgmsg_to_cv(data, "bgr8"))
         except CvBridgeError, e:
             print e
 
-        # Not totally sure what this is going for but I left it for now because I assume it matters for the show image deal.
-       # (cols, rows) = cv.GetSize(self.cv_image)
+    def _intrinsics_callback(self, data):
+        self.distortion = data.D
+        self.matrix = data.K
 
-        # cv.ShowImage("Image window", self.cv_image)
-        # cv.WaitKey(3)
-
-    def subscribe(self):
-        self.image_sub = rospy.Subscriber(self.topic, Image, self._callback)
-
-    def unsubscribe(self):
-        self.image_sub.unregister()
+    def getIntrinsics(self):
+        self.distortion = None
+        self.matrix = None
+        self.intrinsics_sub = rospy.Subscriber(self.intrinsics_sub, CameraInfo, self._intrinsics_callback)
+        while self.distortion is None:
+            continue
+        return (self.distortion, self.matrix)
+        
 
     def getImage(self):
         self.cv_image = None
         self.raw_image = None
-        self.subscribe()
+        self.image_sub = rospy.Subscriber(self.image_topic, Image, self._img_callback)
         while(self.cv_image is None):
             continue
         image = self.cv_image
-        self.unsubscribe()
+        self.image_sub.unregister()
         return image
             
         
