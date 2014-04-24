@@ -8,26 +8,26 @@ import copy
 
 from block import Block
 
-# from geometry_msgs.msg import (
-#     PoseStamped,
-#     Pose,
-#     Point,
-#     Quaternion
-# )
+from geometry_msgs.msg import (
+    PoseStamped,
+    Pose,
+    Point,
+    Quaternion
+)
 
 
 # Perhaps we should stretch (and widen) the green and blue ranges up and down five
 # Then no values from 100-110 would be missing
 COLOR_RANGES = {"BLUE":[np.array([110,50,50]), np.array([130,255,255])],
-                "ORANGE":[np.array([0,50,50]), np.array([20,255,255])],
-                "GREEN":[np.array([80,50,50]), np.array([110,255,255])],
+                "ORANGE":[np.array([10,50,50]), np.array([20,255,255])],
+                "GREEN":[np.array([95,50,50]), np.array([110,255,255])],
                 "BLACK":[] }
 
 SIZE = 150
-DEFAULT_PIXELS_PER_METER = 15.5 / 2.54 * 100
+DEFAULT_PIXELS_PER_METER = 15 / 2.54 * 100
 DEFAULT_HOME_HEIGHT = 25.875 * 2.54 / 100
 #GRIPPER_LENGTH = 3.875 * 2.54 / 100
-GRIPPER_LENGTH = 4.5 * 2.54 / 100
+GRIPPER_LENGTH = 4.3 * 2.54 / 100
 PIXELS_PER_METER_CLOSE = 100 / 2.54 * 100
 
 #PIXELS_PER_INCH = 15.5
@@ -48,10 +48,10 @@ class ImageProcessor(object):
             self.home_height = home_pose.position.z - table_height
         self.home_height = DEFAULT_HOME_HEIGHT
         self.pixels_per_meter = DEFAULT_HOME_HEIGHT / self.home_height * DEFAULT_PIXELS_PER_METER
-        # self.mtx = mtx
-        # self.dist = dist
-        # self.newcameramtx = newcameramtx
-        # self.roi = roi
+        self.camera_matrix = camera_matrix
+        self.distortion = distortion
+        
+
 
 
     def getCorners(self, dimensions):
@@ -95,14 +95,15 @@ class ImageProcessor(object):
 
 
     def undistortImage(self, cv_image):
-        # undistort
+        # undistorti
+        cv2.imwrite("imgprecalib.png", cv_image)
         h,  w = cv_image.shape[:2]
         newcameramtx, roi=cv2.getOptimalNewCameraMatrix(self.camera_matrix,self.distortion,(w,h),1,(w,h))
         dst = cv2.undistort(cv_image, self.camera_matrix, self.distortion, None, newcameramtx)
 
         # crop the image, I could get roi from camera intrinsics or from cv2.getOptimalNewCameraMatrix. Think its not needed though?
-        # x,y,w,h = roi
-        # dst = dst[y:y+h, x:x+w]
+        x,y,w,h = roi
+        dst = np.array(dst[y:y+h, x:x+w])
         cv2.imwrite('calibresult.png',dst)  
         return dst
 
@@ -144,8 +145,8 @@ class ImageProcessor(object):
 
         return Pose(
                 position = Point(
-                            x = self.home_pose.position.x - (image_y - self.im_height/2) / self.pixels_per_meter + .0254 * 1.0,
-                            y = self.home_pose.position.y - (image_x - self.im_width/2) / self.pixels_per_meter + .0254 * 1.25,
+                            x = self.home_pose.position.x - (image_y - self.im_height/2) / self.pixels_per_meter + .0254*.375, #- .0254 * .375,
+                            y = self.home_pose.position.y - (image_x - self.im_width/2) / self.pixels_per_meter + .0254 * 1.625,
                             z = self.home_pose.position.z - self.home_height + GRIPPER_LENGTH),
                 orientation = Quaternion(
                             x = 0,
@@ -225,7 +226,7 @@ class ImageProcessor(object):
             
             cv2.drawContours(self.cv_image, [box], 0, (255,0,0), 2)
 
-        cv2.imwrite('test.png', self.cv_image)
+        cv2.imwrite('test' + color + '.png', self.cv_image)
         cv2.imwrite('output' + color + '.png', mask)
 
         return blockList

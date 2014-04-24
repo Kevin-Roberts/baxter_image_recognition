@@ -9,10 +9,46 @@ from image_receiver import ImageReceiver
 from image_processor import ImageProcessor
 from block import Block
 
-
+from geometry_msgs.msg import (
+    PoseStamped,
+    Pose,
+    Point,
+    Quaternion,
+    )
 
 class MasterController(object):
-    
+    box_pose = {}
+    box_pose['BLUE'] = Pose(position=Point(
+                         x=0.35,
+                         y=0.1445 ,
+                         z=0),             
+                    orientation=Quaternion(
+                         x=0,
+                         y=math.pi/4,
+                         z=0,
+                         w=0,),
+                 )
+    box_pose['ORANGE'] = Pose(position=Point(
+                         x=0.35,
+                         y=0.1445 - 16 * .0254,
+                         z=0),             
+                    orientation=Quaternion(
+                         x=0,
+                         y=math.pi/4,
+                         z=0,
+                         w=0,),
+                 )
+    box_pose['GREEN'] = Pose(position=Point(
+                         x=0.35,
+                         y=0.1445 - 28 * .0254,
+                         z=0),             
+                    orientation=Quaternion(
+                         x=0,
+                         y=math.pi/4,
+                         z=0,
+                         w=0,),
+                 )
+
     def __init__(self, setconfig=False):
         # if setconfig is False:
         #     table_height, mtx, dist, newcameramtx, roi = self.getConfig()
@@ -26,7 +62,10 @@ class MasterController(object):
         self.left_camera.disableCamera()
         self.head_camera.disableCamera()
         self.right_camera.enableCamera()
-        camera_matrix, distortion = self.right_camera.getIntrinsics()
+        distortion, camera_matrix = self.right_camera.getIntrinsics()
+        print camera_matrix
+        print "Distortion:"
+        print distortion
         self.move = MoveController('right')
         self.image_processor = ImageProcessor(self.move.home_pose, camera_matrix, distortion)
         self.blueblocklist = None
@@ -72,6 +111,7 @@ class MasterController(object):
 
     def get_home_image(self):
         self.move.move_to_home()
+        rospy.sleep(0.1)
         image = self.right_camera.getImage()
         self.image_processor.setImage(image)
 
@@ -176,20 +216,31 @@ def main():
         return True
     else:
         mc = MasterController()
-
-    while True:
-        mc.find_blocks()
-        print "pose:"
-        print mc.orangeblocklist[0].pose
+    mc.find_blocks()
+#    z = mc.move.home_pose.position.z
+#    tempz = mc.blueblocklist[0].pose.position.z
+#    mc.blueblocklist[0].pose.position.z = z
+#    mc.move.move_to_pose(mc.blueblocklist[0].pose)
+#    mc.blueblocklist[0].pose.position.z = tempz
+    block_list = mc.blueblocklist + mc.orangeblocklist + mc.greenblocklist
+    for block in block_list:
+        mc.move.pick_at_pose(block.pose)
+        print block.pose
+#        mc.move.raise_up()
+        mc.move.drop_at_pose(mc.box_pose[block.color])
+#    while True:
+#        mc.find_blocks()
+#        print "pose:"
+#        print mc.orangeblocklist[0].pose
         #mc.rh.move_to_pose(mc.blueblocklist[0].pose)
  #	mc.position_above_pose(mc.orangeblocklist[0].pose)
  #	mc.align_pose(mc.orangeblocklist[0].pose, "ORANGE")
  #       mc.move.pick_at_pose(mc.orangeblocklist[0].pose)
  #       mc.move.drop_at_pose(mc.move.home_pose)
         #mc.rh.pick_at_pose(mc.rh.home_pose)
-        if mc.are_blocks_near(mc.orangeblocklist[0]):
-            print "block near"
-        break
+#        if mc.are_blocks_near(mc.orangeblocklist[0]):
+#            print "block near"
+   #     break
 
     #mc.rh.pick_at_pose(mc.rh.home_pose)
 

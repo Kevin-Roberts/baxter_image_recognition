@@ -82,12 +82,16 @@ class MoveController(object):
 
     def raise_up(self):
         moveup_pose = self.arm.endpoint_pose()
-        moveup_pose.position.z = moveup.position.z + 0.15
+        moveup_pose.position.z = moveup_pose.position.z + 0.15
         return self.move_to_pose(moveup_pose)
 
     def pick_at_pose(self, pose):
+        tz = pose.position.z
+        pose.position.z = self.home_pose.position.z
         result = self.move_to_pose(pose)
-
+        pose.position.z = tz
+        result = self.move_to_pose(pose)
+        rospy.sleep(0.2)
         if(result==0):
             result = self.gripper.close(block=True)
         return result

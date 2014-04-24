@@ -26,7 +26,7 @@ class ImageReceiver(object):
         self.bridge = CvBridge()
         self.intrinsics_topic = "/cameras/" + camera_name + "/camera_info"
         self.intrinsics_sub = None
-
+        self.camera_controller.exposure = 99
         self.cv_image = None
         self.raw_image = None
 
@@ -39,15 +39,24 @@ class ImageReceiver(object):
             print e
 
     def _intrinsics_callback(self, data):
-        self.distortion = data.D
-        self.matrix = data.K
+        mat = []
+        mat.append([data.K[0],data.K[1],data.K[2]])
+        mat.append([data.K[3], data.K[4], data.K[5]])
+        mat.append([data.K[6], data.K[7], data.K[8]])
+        dist = np.array(data.D)
+        mat = np.array(mat)
+        print type(dist)
+        print type(mat)
+        self.distortion = dist
+        self.matrix = mat
 
     def getIntrinsics(self):
         self.distortion = None
         self.matrix = None
-        self.intrinsics_sub = rospy.Subscriber(self.intrinsics_sub, CameraInfo, self._intrinsics_callback)
+        self.intrinsics_sub = rospy.Subscriber(self.intrinsics_topic, CameraInfo, self._intrinsics_callback)
         while self.distortion is None:
             continue
+        self.intrinsics_sub.unregister()
         return (self.distortion, self.matrix)
         
 
