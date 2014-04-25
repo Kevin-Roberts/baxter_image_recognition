@@ -41,18 +41,16 @@ class ImageProcessor(object):
 
         self.home_pose = home_pose
         if table_height is None:
-            self.home_height = DEFAULT_HOME_HEIGHT
             self.table_height = home_pose.position.z - DEFAULT_HOME_HEIGHT
         else:
             self.table_height = table_height
-            self.home_height = home_pose.position.z - table_height
-        self.home_height = DEFAULT_HOME_HEIGHT
-        self.pixels_per_meter = DEFAULT_HOME_HEIGHT / self.home_height * DEFAULT_PIXELS_PER_METER
+        self.pixels_per_meter = DEFAULT_HOME_HEIGHT / (home_pose.position.z - self.table_height) * DEFAULT_PIXELS_PER_METER
         self.camera_matrix = camera_matrix
         self.distortion = distortion
         
-
-
+    def update_home_pose(self,pose):
+        self.home_pose = pose
+        self.pixels_per_meter = DEFAULT_HOME_HEIGHT / (pose.position.z - self.table_height) * DEFAULT_PIXELS_PER_METER
 
     def getCorners(self, dimensions):
         # Set the chessboard image as self.cv_image prior to calling this. 
@@ -95,8 +93,6 @@ class ImageProcessor(object):
 
 
     def undistortImage(self, cv_image):
-        # undistorti
-        cv2.imwrite("imgprecalib.png", cv_image)
         h,  w = cv_image.shape[:2]
         newcameramtx, roi=cv2.getOptimalNewCameraMatrix(self.camera_matrix,self.distortion,(w,h),1,(w,h))
         dst = cv2.undistort(cv_image, self.camera_matrix, self.distortion, None, newcameramtx)
@@ -128,26 +124,11 @@ class ImageProcessor(object):
         image_x = (box[0][0] + box[2][0]) / 2
         image_y = (box[0][1] + box[2][1]) / 2
 
-        print image_x
-        print image_y
-
-        print self.im_height
-        print self.im_width
-
-        print "\n"
-
-        print image_x - self.im_width/2
-        print self.pixels_per_meter
-
-        print "\n"
-
-        print self.home_pose.position.x
-
         return Pose(
                 position = Point(
                             x = self.home_pose.position.x - (image_y - self.im_height/2) / self.pixels_per_meter + .0254*.375, #- .0254 * .375,
                             y = self.home_pose.position.y - (image_x - self.im_width/2) / self.pixels_per_meter + .0254 * 1.625,
-                            z = self.home_pose.position.z - self.home_height + GRIPPER_LENGTH),
+                            z = self.table_height + GRIPPER_LENGTH),
                 orientation = Quaternion(
                             x = 0,
                             y = math.pi/4,
@@ -191,7 +172,7 @@ class ImageProcessor(object):
         pose.position.x -= min_x_offset / PIXELS_PER_METER_CLOSE - .0254 * 1.0
         pose.position.y -= min_y_offset / PIXELS_PER_METER_CLOSE - .0254 * 1.25
 
-    def findBlock(self, color, pic_pose = None):
+    def findBlock(self, color):
         if pic_pose is None:
             pic_pose = self.home_pose
         c_range = COLOR_RANGES.get(color,None)
@@ -199,35 +180,27 @@ class ImageProcessor(object):
         if c_range is None:
             print "Invalid Color"
             return None
-
         # Extract new range of color
         mask = cv2.inRange(self.hsv_image, c_range[0], c_range[1])
-
         # Find color boundaries
         contours, hierarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-
         # Only save large area shapes, ignore small specs of color matching
         blocks = []
 
         for contour in contours:
             area = cv2.contourArea(contour)
-
             if area > SIZE:
                 blocks.append(contour)
 
-        # get list of blocks, box has the corner coordinates of each block in pixels
         blockList = []
         for i in range(0, len(blocks)):
             rect = cv2.minAreaRect(blocks[i])
             box = cv2.cv.BoxPoints(rect)
             box = np.int0(box)
-
-            blockList.append(Block(color, self.boxCordsToPose(box)));
-            
+            blockList.append(Block(color, self.boxCordsToPose(box)));   
             cv2.drawContours(self.cv_image, [box], 0, (255,0,0), 2)
 
         cv2.imwrite('test' + color + '.png', self.cv_image)
-        cv2.imwrite('output' + color + '.png', mask)
 
         return blockList
 
@@ -238,8 +211,8 @@ class ImageProcessor(object):
 
         newPose = Pose(
                 position = Point(
-                            x = pic_pose.position.x - (image_y - self.im_height/2) / pixels_per_meter + .0254 * 1.0,
-                            y = pic_pose.position.y - (image_x - self.im_width/2) / pixels_per_meter + .0254 * 1.25,
+                            x = pic_pose.position.x - (image_y - self.im_height/2) / pixels_per_meter + .0254 * 0.375
+                            y = pic_pose.position.y - (image_x - self.im_width/2) / pixels_per_meter + .0254 * 1.625,
                             z = self.table_height + GRIPPER_LENGTH),
                 orientation = Quaternion(
                             x = 0,

@@ -80,31 +80,39 @@ class MoveController(object):
     def move_to_home(self):
         return self.move_to_pose(self.home_pose)
 
-    def raise_up(self):
-        moveup_pose = self.arm.endpoint_pose()
-        moveup_pose.position.z = moveup_pose.position.z + 0.15
-        return self.move_to_pose(moveup_pose)
+    def raise_up(self, pose):
+        pose.position.z += 0.25
+        result = self.move_to_pose(pose)
+        if result == -1:
+            pose.position.z-=0.1
+            result = self.move_to_pose(pose)
+            pose.position.z-=0.15
+        else:
+            pose.position.z-=0.25
+        return result
 
     def pick_at_pose(self, pose):
         tz = pose.position.z
         pose.position.z = self.home_pose.position.z
         result = self.move_to_pose(pose)
+
+        pose.position.z = tz + 0.1
+        result = self.move_to_pose(pose)
         pose.position.z = tz
         result = self.move_to_pose(pose)
+        #if(result==0):
         rospy.sleep(0.2)
-        if(result==0):
-            result = self.gripper.close(block=True)
+        result = self.gripper.close(block=True)
         return result
 
     def drop_at_pose(self, pose):
+        result = self.raise_up(pose)
         result = self.move_to_pose(pose)
-        if(result == 0):
-            result = self.gripper.open(block=True)
+        #if(result==0):
+        result = self.gripper.open(block=True)
             
         return result
 
-
-    # I wouldn't be surprised if this needs some work and possibly a whole new implementation
     def update_table_height(self):
         tempPose = Pose(
                  position=Point(

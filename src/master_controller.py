@@ -50,11 +50,6 @@ class MasterController(object):
                  )
 
     def __init__(self, setconfig=False):
-        # if setconfig is False:
-        #     table_height, mtx, dist, newcameramtx, roi = self.getConfig()
-        # else:
-        #     table_height, mtx, dist, newcameramtx, roi = None, None, None, None, None
-
         rospy.init_node("senior_design")
         self.right_camera = ImageReceiver("right_hand_camera")
         self.left_camera = ImageReceiver("left_hand_camera")
@@ -68,46 +63,11 @@ class MasterController(object):
         print distortion
         self.move = MoveController('right')
         self.image_processor = ImageProcessor(self.move.home_pose, camera_matrix, distortion)
-        self.blueblocklist = None
-        self.orangeblocklist = None
-        self.greenblocklist = None
-        self.queue = None
+        self.block_list = {'BLUE':[], 'ORANGE':[], 'GREEN':[]}
 
-        # if setconfig:
-        #     self.setConfig()
-
-
-    def setConfig(self):
-        self.move.update_table_height()
-        table_height = self.move.table_height
-
-        objpoints = []
-        imgpoints = []
-        found = 0
-        while found < 10:
-            self.move.move_to_home()
-            image = self.right_camera.getImage()
-            self.image_processor.setImage(image, undistort=False)
-            res = self.image_processor.getCorners((7,6))
-            if res:
-                objpoints.append(res[0])
-                imgpoints.append(res[1])
-                found+=1
-        mtx, dist, newcameramtx, roi = self.image_processor.calibrateCamera(objpoints, imgpoints)
-        # Might have to put table_height into an array (i.e. table_height=[table_height]) or even nparray or write it without savez not certain
-        np.savez("config.npz", table_height=table_height, mtx=mtx, dist=dist, newcameramtx=newcameramtx, roi=roi)
-
-
-    def getConfig(self):
-        try:
-            npzfile = np.load("config.npz")
-            ret = (npzfile['table_height'], npzfile['mtx'], npzfile['dist'], npzfile['newcameramtx'], npzfile['roi'])
-        except IOError, e:
-            print "Config file not found, run with --config parameter"
-            print e
-            ret = (None, None, None, None, None)
-
-        return ret
+    def update_home_pose(self, pose):
+        self.image_processor.update_pose(pose)
+        self.move.home_pose = pose
 
     def get_home_image(self):
         self.move.move_to_home()
@@ -117,9 +77,12 @@ class MasterController(object):
 
     def find_blocks(self):
         self.get_home_image()
-        self.blueblocklist = self.image_processor.findBlock("BLUE")
-        self.orangeblocklist = self.image_processor.findBlock("ORANGE")
-        self.greenblocklist = self.image_processor.findBlock("GREEN")
+        self.block_list['BLUE'] = self.image_processor.findBlock("BLUE")
+        print "Found " + len(self.block_list['BLUE']) + " blue blocks"
+        self.block_list['ORANGE'] = self.image_processor.findBlock("ORANGE")
+        print "Found " + len(self.block_list['ORANGE']) + " orange blocks"
+        self.block_list['GREEN'] = self.image_processor.findBlock("GREEN")
+        print "Found " + len(self.block_list['GREEN']) + " green blocks"
 
     def position_above_pose(self, pose):
         z_offset = .02
@@ -131,17 +94,10 @@ class MasterController(object):
         self.image_processor.setImage(self.right_camera.getImage())
         self.image_processor.setAlignedPose(pose, color)
 
-    def get_block_coords(self):
-        return 0
-
     def sort_blocklist(self):
+        #Could choose the order they are grabbed in? Look through each block list
         return 0
-        #this can sort the blocks into the queue
-
-    def move_block(self, block):
-        return 0
-        #self.rh.pick_at_pose(block.pose)
-        #self.rh.drop_at_pose(box.(block.color).pose) #this will probably change
+        
 
     def are_blocks_near(self, block):
         xthresh = 0
@@ -154,103 +110,39 @@ class MasterController(object):
         #print block.pose.position      #debug code
 
         #check for close blue blocks
-        for block2 in self.blueblocklist:
-        #    print "Blue block at:"     #debug code
-        #    print block2.pose.position #debug code
-            if (xpose != block2.pose.position.x) and (ypose != block2.pose.position.y):
-                if (math.fabs(xpose - block2.pose.position.x) < xthresh):
-                    print "Block at "
-                    print block.pose
-                    print "is close to blue block in the y direction."
-                    isclose = True
-                if (math.fabs(ypose - block2.pose.position.y) < ythresh):
-                    print "Block at "
-                    print block.pose
-                    print "is close to blue block in the y direction."
-                    isclose = True
-
-        #check for close orange blocks
-        for block2 in self.orangeblocklist:
-        #    print "Orange block at:"   #debug code
-        #    print block2.pose.position #debug code
-            if (xpose != block2.pose.position.x) and (ypose != block2.pose.position.y):
-                if (math.fabs(xpose - block2.pose.position.x) < xthresh):
-                    print "Block at "
-                    print block.pose
-                    print "is close to orange block in the y direction."
-                    isclose = True
-                if (math.fabs(ypose - block2.pose.position.y) < ythresh):
-                    print "Block at "
-                    print block.pose
-                    print "is close to orange block in the y direction."
-                    isclose = True
-
-
-        #check for close blue blocks
-        for i in self.greenblocklist:
-        #    print "Green block at:"    #debug code
-        #    print block2.pose.position #debug code
-            if (xpose != block2.pose.position.x) and (ypose != block2.pose.position.y):
-                if (math.fabs(xpose - block2.pose.position.x) < xthresh):
-                    print "Block at "
-                    print block.pose
-                    print "is close to green block in the y direction."
-                    isclose = True
-                if (math.fabs(ypose - block2.pose.position.y) < ythresh):
-                    print "Block at "
-                    print block.pose
-                    print "is close to green block in the y direction."
-                    isclose = True
+        for color in self.block_list:
+            for block2 in self.block_list[color]:
+            #    print "Blue block at:"     #debug code
+            #    print block2.pose.position #debug code
+                if (xpose != block2.pose.position.x) and (ypose != block2.pose.position.y):
+                    if (math.fabs(xpose - block2.pose.position.x) < xthresh):
+                        print "Block at "
+                        print block.pose
+                        print "is close to blue block in the y direction."
+                        isclose = True
+                    if (math.fabs(ypose - block2.pose.position.y) < ythresh):
+                        print "Block at "
+                        print block.pose
+                        print "is close to blue block in the y direction."
+                        isclose = True
 
         return isclose
 
-        
-        
 
 def main():
-    
-
     if len(sys.argv) > 1:
         mc = MasterController(setconfig = True)
         print "Config complete"
         return True
     else:
         mc = MasterController()
+
     mc.find_blocks()
-#    z = mc.move.home_pose.position.z
-#    tempz = mc.blueblocklist[0].pose.position.z
-#    mc.blueblocklist[0].pose.position.z = z
-#    mc.move.move_to_pose(mc.blueblocklist[0].pose)
-#    mc.blueblocklist[0].pose.position.z = tempz
-    block_list = mc.blueblocklist + mc.orangeblocklist + mc.greenblocklist
-    for block in block_list:
-        mc.move.pick_at_pose(block.pose)
-        print block.pose
-#        mc.move.raise_up()
-        mc.move.drop_at_pose(mc.box_pose[block.color])
-#    while True:
-#        mc.find_blocks()
-#        print "pose:"
-#        print mc.orangeblocklist[0].pose
-        #mc.rh.move_to_pose(mc.blueblocklist[0].pose)
- #	mc.position_above_pose(mc.orangeblocklist[0].pose)
- #	mc.align_pose(mc.orangeblocklist[0].pose, "ORANGE")
- #       mc.move.pick_at_pose(mc.orangeblocklist[0].pose)
- #       mc.move.drop_at_pose(mc.move.home_pose)
-        #mc.rh.pick_at_pose(mc.rh.home_pose)
-#        if mc.are_blocks_near(mc.orangeblocklist[0]):
-#            print "block near"
-   #     break
-
-    #mc.rh.pick_at_pose(mc.rh.home_pose)
-
-        
-def ktest():
-    master = MasterController()
-    while True:
-        master.find_blocks()
-        tpose = getBlockPose()
-
+    for color in mc.block_list:
+        for block in mc.block_list[color]:
+            mc.move.pick_at_pose(block.pose)
+            mc.move.raise_up(block.pose)
+            mc.move.drop_at_pose(mc.box_pose[color])
 
 
 if __name__ == '__main__':
