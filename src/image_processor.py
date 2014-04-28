@@ -18,9 +18,9 @@ from geometry_msgs.msg import (
 
 # Perhaps we should stretch (and widen) the green and blue ranges up and down five
 # Then no values from 100-110 would be missing
-COLOR_RANGES = {"BLUE":[np.array([110,50,50]), np.array([130,255,255])],
-                "ORANGE":[np.array([10,50,50]), np.array([20,255,255])],
-                "GREEN":[np.array([95,50,50]), np.array([110,255,255])],
+COLOR_RANGES = {"PURPLE":[np.array([120,20,50]), np.array([165,255,255])],
+                "ORANGE":[np.array([-10,40,50]), np.array([20,255,255])],
+                "GREEN":[np.array([80,40,50]), np.array([110,255,255])],
                 "BLACK":[] }
 
 SIZE = 150
@@ -142,7 +142,7 @@ class ImageProcessor(object):
             print "Invalied Color"
             return None
 
-        mask = cv2.inRange(self.hsv_image, c_range[0], c_range[1])
+        mask = inRange(self.hsv_image, c_range[0], c_range[1])
         contours, heirarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
         blocks = []
@@ -173,15 +173,16 @@ class ImageProcessor(object):
         pose.position.y -= min_y_offset / PIXELS_PER_METER_CLOSE - .0254 * 1.25
 
     def findBlock(self, color):
-        if pic_pose is None:
-            pic_pose = self.home_pose
+        #if pic_pose is None:
+        pic_pose = self.home_pose
+
         c_range = COLOR_RANGES.get(color,None)
 
         if c_range is None:
             print "Invalid Color"
             return None
         # Extract new range of color
-        mask = cv2.inRange(self.hsv_image, c_range[0], c_range[1])
+        mask = inRange(self.hsv_image, c_range[0], c_range[1])
         # Find color boundaries
         contours, hierarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
         # Only save large area shapes, ignore small specs of color matching
@@ -211,7 +212,7 @@ class ImageProcessor(object):
 
         newPose = Pose(
                 position = Point(
-                            x = pic_pose.position.x - (image_y - self.im_height/2) / pixels_per_meter + .0254 * 0.375
+                            x = pic_pose.position.x - (image_y - self.im_height/2) / pixels_per_meter + .0254 * 0.375,
                             y = pic_pose.position.y - (image_x - self.im_width/2) / pixels_per_meter + .0254 * 1.625,
                             z = self.table_height + GRIPPER_LENGTH),
                 orientation = Quaternion(
@@ -227,6 +228,21 @@ class ImageProcessor(object):
         if img is None:
             img = self.cv_image
         cv2.imwrite(fname, img)
+
+
+def inRange(img, low, high):
+    if (low[0] < 0):
+        low1 = np.array([180 + low[0], low[1], low[2]])
+        high1 = np.array([179, high[1], high[2]])
+
+        low[0] = 0
+
+        res = cv2.inRange(img, low, high)
+        res1 = cv2.inRange(img, low1, high1)
+
+        return cv2.bitwise_or(res, res1)
+    else:
+        return cv2.inRange(img, low, high)
 
 
 def ktest():

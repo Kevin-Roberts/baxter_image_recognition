@@ -3,6 +3,7 @@
 import sys
 import rospy
 import math
+import cv2
 import numpy as np
 from move_controller import MoveController
 from image_receiver import ImageReceiver
@@ -18,7 +19,7 @@ from geometry_msgs.msg import (
 
 class MasterController(object):
     box_pose = {}
-    box_pose['BLUE'] = Pose(position=Point(
+    box_pose['PURPLE'] = Pose(position=Point(
                          x=0.35,
                          y=0.1445 ,
                          z=0),             
@@ -63,7 +64,7 @@ class MasterController(object):
         print distortion
         self.move = MoveController('right')
         self.image_processor = ImageProcessor(self.move.home_pose, camera_matrix, distortion)
-        self.block_list = {'BLUE':[], 'ORANGE':[], 'GREEN':[]}
+        self.block_list = {'PURPLE':[], 'ORANGE':[], 'GREEN':[]}
 
     def update_home_pose(self, pose):
         self.image_processor.update_pose(pose)
@@ -77,12 +78,12 @@ class MasterController(object):
 
     def find_blocks(self):
         self.get_home_image()
-        self.block_list['BLUE'] = self.image_processor.findBlock("BLUE")
-        print "Found " + len(self.block_list['BLUE']) + " blue blocks"
+        self.block_list['PURPLE'] = self.image_processor.findBlock("PURPLE")
+        #print "Found " + str(len(self.block_list['PURPLE'])) + " purple blocks"
         self.block_list['ORANGE'] = self.image_processor.findBlock("ORANGE")
-        print "Found " + len(self.block_list['ORANGE']) + " orange blocks"
+        #print "Found " + str(len(self.block_list['ORANGE'])) + " orange blocks"
         self.block_list['GREEN'] = self.image_processor.findBlock("GREEN")
-        print "Found " + len(self.block_list['GREEN']) + " green blocks"
+        #print "Found " + str(len(self.block_list['GREEN'])) + " green blocks"
 
     def position_above_pose(self, pose):
         z_offset = .02
@@ -97,7 +98,7 @@ class MasterController(object):
     def sort_blocklist(self):
         #Could choose the order they are grabbed in? Look through each block list
         return 0
-        
+
 
     def are_blocks_near(self, block):
         xthresh = 0
@@ -105,7 +106,7 @@ class MasterController(object):
         xpose = block.pose.position.x
         ypose = block.pose.position.y
         isclose = False
-        
+
         #print "Current block:________" #debug code
         #print block.pose.position      #debug code
 
@@ -137,12 +138,42 @@ def main():
     else:
         mc = MasterController()
 
-    mc.find_blocks()
-    for color in mc.block_list:
-        for block in mc.block_list[color]:
-            mc.move.pick_at_pose(block.pose)
-            mc.move.raise_up(block.pose)
-            mc.move.drop_at_pose(mc.box_pose[color])
+    p = 0
+    f = 0
+
+    for i in xrange(0, 500):
+        mc.find_blocks()
+
+        if (len(mc.block_list['PURPLE']) != 4 or
+            len(mc.block_list['ORANGE']) != 4 or
+            len(mc.block_list['GREEN']) != 4):
+
+            failstring = ""
+
+            if (len(mc.block_list['PURPLE']) != 4):
+                failstring += "PURPLE FAILED\t"
+
+            if (len(mc.block_list['ORANGE']) != 4):
+                failstring += "ORANGE FAILED\t"
+
+            if (len(mc.block_list['GREEN']) != 4):
+                failstring += "GREEN FAILED\t"
+
+            cv2.imwrite("testimages/fail_" + str(f) + ".png", mc.image_processor.cv_image)
+
+            f += 1
+        else:
+            p += 1
+
+            cv2.imwrite("testimages/pass_" + str(p) + ".png", mc.image_processor.cv_image)
+
+        print "Pass: " + str(p) + "\tFail: " + str(f)
+
+    #for color in mc.block_list:
+    #    for block in mc.block_list[color]:
+    #        mc.move.pick_at_pose(block.pose)
+    #        mc.move.raise_up(block.pose)
+    #        mc.move.drop_at_pose(mc.box_pose[color])
 
 
 if __name__ == '__main__':
