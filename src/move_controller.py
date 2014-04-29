@@ -45,7 +45,7 @@ class MoveController(object):
         self.ikreq = SolvePositionIKRequest()
         self.hdr = Header(stamp=rospy.Time.now(), frame_id='base')
         self.arm = baxter_interface.Limb(arm)
-        self.arm.set_joint_position_speed(0.3)
+        self.arm.set_joint_position_speed(0.95)
         self.gripper = baxter_interface.Gripper(arm)
         self.gripper.calibrate()
         self.table_height = None
@@ -96,17 +96,17 @@ class MoveController(object):
         pose.position.z = self.home_pose.position.z
         result = self.move_to_pose(pose)
 
-        pose.position.z = tz + 0.1
+        pose.position.z = tz + 0.04
         result = self.move_to_pose(pose)
         pose.position.z = tz
         result = self.move_to_pose(pose)
         #if(result==0):
-        rospy.sleep(0.2)
         result = self.gripper.close(block=True)
+        rospy.sleep(0.3)
         return result
 
     def drop_at_pose(self, pose):
-        result = self.raise_up(pose)
+        #result = self.raise_up(pose)
         result = self.move_to_pose(pose)
         #if(result==0):
         result = self.gripper.open(block=True)

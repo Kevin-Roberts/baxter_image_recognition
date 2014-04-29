@@ -27,7 +27,7 @@ SIZE = 150
 DEFAULT_PIXELS_PER_METER = 15 / 2.54 * 100
 DEFAULT_HOME_HEIGHT = 25.875 * 2.54 / 100
 #GRIPPER_LENGTH = 3.875 * 2.54 / 100
-GRIPPER_LENGTH = 4.3 * 2.54 / 100
+GRIPPER_LENGTH = 4.6 * 2.54 / 100
 PIXELS_PER_METER_CLOSE = 100 / 2.54 * 100
 
 #PIXELS_PER_INCH = 15.5
@@ -118,7 +118,9 @@ class ImageProcessor(object):
 
             self.hsv_image = cv2.cvtColor(self.cv_image,cv2.COLOR_BGR2HSV)
 
-            self.im_width, self.im_height = cv2.cv.GetSize(cv2.cv.fromarray(self.cv_image))  
+            self.im_width, self.im_height = cv2.cv.GetSize(cv2.cv.fromarray(self.cv_image))
+            cv2.rectangle(self.hsv_image, (0,0),(0,20),(0,0,0),-1)  
+            cv2.rectangle(self.hsv_image, (0,self.im_height*2/3), (self.im_width,self.im_height), (0,0,0),-1)
 
     def boxCordsToPose(self, box):
         image_x = (box[0][0] + box[2][0]) / 2
@@ -126,7 +128,7 @@ class ImageProcessor(object):
 
         return Pose(
                 position = Point(
-                            x = self.home_pose.position.x - (image_y - self.im_height/2) / self.pixels_per_meter + .0254*.375, #- .0254 * .375,
+                            x = self.home_pose.position.x - (image_y - self.im_height/2) / self.pixels_per_meter + .0254*.335, #- .0254 * .375,
                             y = self.home_pose.position.y - (image_x - self.im_width/2) / self.pixels_per_meter + .0254 * 1.625,
                             z = self.table_height + GRIPPER_LENGTH),
                 orientation = Quaternion(
@@ -187,6 +189,7 @@ class ImageProcessor(object):
         contours, hierarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
         # Only save large area shapes, ignore small specs of color matching
         blocks = []
+
 
         for contour in contours:
             area = cv2.contourArea(contour)

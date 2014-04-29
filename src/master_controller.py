@@ -59,9 +59,6 @@ class MasterController(object):
         self.head_camera.disableCamera()
         self.right_camera.enableCamera()
         distortion, camera_matrix = self.right_camera.getIntrinsics()
-        print camera_matrix
-        print "Distortion:"
-        print distortion
         self.move = MoveController('right')
         self.image_processor = ImageProcessor(self.move.home_pose, camera_matrix, distortion)
         self.block_list = {'PURPLE':[], 'ORANGE':[], 'GREEN':[]}
@@ -137,11 +134,11 @@ def main():
         return True
     else:
         mc = MasterController()
-
+    """
     p = 0
     f = 0
 
-    for i in xrange(0, 500):
+    for i in xrange(0, 5):
         mc.find_blocks()
 
         if (len(mc.block_list['PURPLE']) != 4 or
@@ -169,11 +166,22 @@ def main():
 
         print "Pass: " + str(p) + "\tFail: " + str(f)
 
-    #for color in mc.block_list:
-    #    for block in mc.block_list[color]:
-    #        mc.move.pick_at_pose(block.pose)
-    #        mc.move.raise_up(block.pose)
-    #        mc.move.drop_at_pose(mc.box_pose[color])
+    """
+    for i in range(2):
+        mc.find_blocks()
+        didb = False
+        for color in mc.block_list:
+            for block in mc.block_list[color]:
+                mc.move.pick_at_pose(block.pose)
+                mc.move.raise_up(block.pose)
+                if not mc.move.gripper.gripping():
+                    mc.move.gripper.open(block=True)
+                    didb = True
+                    break
+                mc.move.drop_at_pose(mc.box_pose[color])
+            if didb:
+                break
+    #mc.find_blocks()
 
 
 if __name__ == '__main__':
