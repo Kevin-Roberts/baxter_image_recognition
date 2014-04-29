@@ -126,6 +126,32 @@ class MasterController(object):
 
         return isclose
 
+    def get_blocks(self, trials=2, miss_per_trial = 2):
+        result = 0
+
+        for i in range(trials):
+            self.find_blocks()
+            num_missed = 0
+            for color in self.block_list:
+                for block in self.block_list[color]:
+                    result = self.move.pick_at_pose(block.pose)
+                    # result == 0 means block pose was valid, if it wasn't go to the next block
+                    if result == 0:
+                        self.move.raise_up(block.pose)
+                        if not self.move.gripper.gripping():
+                            self.move.gripper.open(block=False)
+                            num_missed +=1
+                            if num_missed == miss_per_trial:
+                                break
+                        self.move.drop_at_pose(self.box_pose[color])
+                if num_missed == miss_per_trial:
+                    # want to break two loops when the gripper doesn't grip
+                    break
+            if num_missed == 0:
+                # Would mean that all blocks were found in the picture
+                return num_missed
+        return num_missed  
+
 
 def main():
     if len(sys.argv) > 1:
@@ -167,20 +193,12 @@ def main():
         print "Pass: " + str(p) + "\tFail: " + str(f)
 
     """
-    for i in range(2):
-        mc.find_blocks()
-        didb = False
-        for color in mc.block_list:
-            for block in mc.block_list[color]:
-                mc.move.pick_at_pose(block.pose)
-                mc.move.raise_up(block.pose)
-                if not mc.move.gripper.gripping():
-                    mc.move.gripper.open(block=True)
-                    didb = True
-                    break
-                mc.move.drop_at_pose(mc.box_pose[color])
-            if didb:
-                break
+
+    mc.get_blocks()
+    new_home = mc.move.new_home_pose()
+    new_home.position.x += 0.1   
+    mc.update_home_pose(new_home)
+    mc.get_blocks()
     #mc.find_blocks()
 
 

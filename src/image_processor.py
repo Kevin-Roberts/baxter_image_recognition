@@ -4,7 +4,6 @@ import numpy as np
 import cv2
 
 import math
-import copy
 
 from block import Block
 
@@ -52,46 +51,6 @@ class ImageProcessor(object):
         self.home_pose = pose
         self.pixels_per_meter = DEFAULT_HOME_HEIGHT / (pose.position.z - self.table_height) * DEFAULT_PIXELS_PER_METER
 
-    def getCorners(self, dimensions):
-        # Set the chessboard image as self.cv_image prior to calling this. 
-        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-        # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-        objp = np.zeros((dimensions[0]*dimensions[1],3), np.float32)
-        objp[:,:2] = np.mgrid[0:dimensions[0],0:dimensions[1]].T.reshape(-1,2)
-
-        # Arrays to store object points and image points from all the images.
-        objpoints = [] # 3d point in real world space
-        imgpoints = [] # 2d points in image plane.
-
-        gray = cv2.cvtColor(self.cv_image,cv2.COLOR_BGR2GRAY)
-        self.writeImage(gray, "test2.png")
-        # Find the chess board corners
-        ret, corners = cv2.findChessboardCorners(gray, (dimensions[0],dimensions[1]), flags = cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_NORMALIZE_IMAGE + cv2.CALIB_CB_FAST_CHECK)
-
-        # If found, add object points, image points (after refining them)
-        if ret == True:
-
-            cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
-
-
-            # Draw the corners, will eventually get rid of this
-            cv2.drawChessboardCorners(self.cv_image, (dimensions[0],dimensions[1]), corners,ret)
-            self.writeImage()
-        else:
-            print "Pattern Not found! Skipping Camera Calibration"
-            return False
-
-        return (objp,corners, gray.shape[::-1])
-
-    def calibrateCamera(self, objpoints, imgpoints, dim):
-        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, dim,None,None)
-
-        h,  w = self.cv_image.shape[:2]
-        newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
-
-        return (mtx, dist, newcameramtx, roi)
-
-
     def undistortImage(self, cv_image):
         h,  w = cv_image.shape[:2]
         newcameramtx, roi=cv2.getOptimalNewCameraMatrix(self.camera_matrix,self.distortion,(w,h),1,(w,h))
@@ -100,7 +59,6 @@ class ImageProcessor(object):
         # crop the image, I could get roi from camera intrinsics or from cv2.getOptimalNewCameraMatrix. Think its not needed though?
         x,y,w,h = roi
         dst = np.array(dst[y:y+h, x:x+w])
-        cv2.imwrite('calibresult.png',dst)  
         return dst
 
     def setImage(self, cv_image, undistort=True):
@@ -119,7 +77,7 @@ class ImageProcessor(object):
             self.hsv_image = cv2.cvtColor(self.cv_image,cv2.COLOR_BGR2HSV)
 
             self.im_width, self.im_height = cv2.cv.GetSize(cv2.cv.fromarray(self.cv_image))
-            cv2.rectangle(self.hsv_image, (0,0),(0,20),(0,0,0),-1)  
+            cv2.rectangle(self.hsv_image, (0,0),(self.im_width,20),(0,0,0),-1)  
             cv2.rectangle(self.hsv_image, (0,self.im_height*2/3), (self.im_width,self.im_height), (0,0,0),-1)
 
     def boxCordsToPose(self, box):
@@ -208,23 +166,6 @@ class ImageProcessor(object):
 
         return blockList
 
-    def getBlockPose(self, pic_pose, box):
-        image_x = (box[0][0] + box[2][0]) / 2
-        image_y = (box[0][1] + box[2][1]) / 2
-        pixels_per_meter = DEFAULT_HOME_HEIGHT / (pic_pose.position.z - self.table_height) * DEFAULT_PIXELS_PER_METER
-
-        newPose = Pose(
-                position = Point(
-                            x = pic_pose.position.x - (image_y - self.im_height/2) / pixels_per_meter + .0254 * 0.375,
-                            y = pic_pose.position.y - (image_x - self.im_width/2) / pixels_per_meter + .0254 * 1.625,
-                            z = self.table_height + GRIPPER_LENGTH),
-                orientation = Quaternion(
-                            x = 0,
-                            y = math.pi/4,
-                            z = 0,
-                            w = 0))  
-        return newPose      
-
     def writeImage(self, img=None, fname=None):
         if fname is None:
             fname = 'test.png'
@@ -247,15 +188,3 @@ def inRange(img, low, high):
     else:
         return cv2.inRange(img, low, high)
 
-
-def ktest():
-    # need to remove table_height / home_height calculation for this to work
-    ip = ImageProcessor(None, None, None)
-    ip.setImage(cv2.imread("calib_radial.jpg"), undistort=False)
-    res = ip.getCorners(dimensions = (7,6))
-    if res:
-        print ip.calibrateCamera([res[0]], [res[1]], res[2])
-
-
-if __name__ == "__main__":
-    ktest()
