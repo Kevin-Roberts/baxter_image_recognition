@@ -78,7 +78,8 @@ class ImageProcessor(object):
 
             self.im_width, self.im_height = cv2.cv.GetSize(cv2.cv.fromarray(self.cv_image))
             cv2.rectangle(self.hsv_image, (0,0),(self.im_width,20),(0,0,0),-1)  
-            cv2.rectangle(self.hsv_image, (0,self.im_height*2/3), (self.im_width,self.im_height), (0,0,0),-1)
+            cv2.rectangle(self.hsv_image, (0,self.im_height*2/3-5), (self.im_width,self.im_height), (0,0,0),-1)
+            cv2.imwrite("test.png", self.hsv_image)
 
     def boxCordsToPose(self, box):
         image_x = (box[0][0] + box[2][0]) / 2

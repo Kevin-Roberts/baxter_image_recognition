@@ -82,14 +82,14 @@ class MoveController(object):
         return result
 
     def move_to_home(self):
-        return self.move_to_pose(self.home_pose)
+        return self.move_to_pose([self.home_pose])
 
     def raise_up(self, pose):
-        pose.position.z += 0.25
-        result = self.move_to_pose(pose)
+        pose.position.z += 0.3
+        result = self.move_to_pose([pose])
         if result == -1:
             pose.position.z-=0.1
-            result = self.move_to_pose(pose)
+            result = self.move_to_pose([pose])
             pose.position.z-=0.15
         else:
             pose.position.z-=0.25
@@ -98,12 +98,12 @@ class MoveController(object):
     def pick_at_pose(self, pose):
         t1 = copy.deepcopy(pose)
         t2 = copy.deepcopy(pose)
-        t3 = copy.deepcopy(pose)
+        #t3 = copy.deepcopy(pose)
         tz = pose.position.z
         t1.position.z = self.home_pose.position.z
-        t2.position.z = tz + 0.04
-        t3.position.z = tz + 0.02
-        poselist = [t1, t2, t3, pose]
+        t2.position.z = tz + 0.03
+        #t3.position.z = tz + 0.02
+        poselist = [t1, t2, pose]
         result = self.move_to_pose(poselist)
         # pose.position.z = self.home_pose.position.z
         # result = self.move_to_pose(pose)
@@ -120,7 +120,7 @@ class MoveController(object):
 
     def drop_at_pose(self, pose):
         #result = self.raise_up(pose)
-        result = self.move_to_pose(pose)
+        result = self.move_to_pose([pose])
         #if(result==0):
         self.gripper.open(block=True)
             
@@ -140,10 +140,10 @@ class MoveController(object):
                      w=0,),
                )
 
-        self.move_to_pose(tempPose)
+        self.move_to_pose([tempPose])
         while self.getInfrared() is False:
             tempPose.position.z = tempPose.position.z - 0.2
-            self.move_to_pose(tempPose)
+            self.move_to_pose([tempPose])
         
         # Get infrared sets self.table_height to the infrared distance, add drop distance
         self.table_height += (self.home_pose.position.z - tempPose.position.z)

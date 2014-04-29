@@ -20,9 +20,9 @@ from geometry_msgs.msg import (
 class MasterController(object):
     box_pose = {}
     box_pose['PURPLE'] = Pose(position=Point(
-                         x=0.35,
+                         x=0.31,
                          y=0.1445 ,
-                         z=0),             
+                         z=0.1),             
                     orientation=Quaternion(
                          x=0,
                          y=math.pi/4,
@@ -30,9 +30,9 @@ class MasterController(object):
                          w=0,),
                  )
     box_pose['ORANGE'] = Pose(position=Point(
-                         x=0.35,
-                         y=0.1445 - 16 * .0254,
-                         z=0),             
+                         x=0.31,
+                         y=0.1445 - 36 * .0254,
+                         z=0.1),             
                     orientation=Quaternion(
                          x=0,
                          y=math.pi/4,
@@ -40,9 +40,9 @@ class MasterController(object):
                          w=0,),
                  )
     box_pose['GREEN'] = Pose(position=Point(
-                         x=0.35,
-                         y=0.1445 - 28 * .0254,
-                         z=0),             
+                         x=0.31,
+                         y=0.1445 - 27 * .0254,
+                         z=0.1),             
                     orientation=Quaternion(
                          x=0,
                          y=math.pi/4,
@@ -64,7 +64,7 @@ class MasterController(object):
         self.block_list = {'PURPLE':[], 'ORANGE':[], 'GREEN':[]}
 
     def update_home_pose(self, pose):
-        self.image_processor.update_pose(pose)
+        self.image_processor.update_home_pose(pose)
         self.move.home_pose = pose
 
     def get_home_image(self):
@@ -196,7 +196,7 @@ def main():
 
     mc.get_blocks()
     new_home = mc.move.new_home_pose()
-    new_home.position.x += 0.1   
+    new_home.position.x += 0.12 
     mc.update_home_pose(new_home)
     mc.get_blocks()
     #mc.find_blocks()
