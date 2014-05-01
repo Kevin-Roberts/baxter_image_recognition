@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 
 import math
+import quaternion_transform
 
 from block import Block
 
@@ -85,16 +86,21 @@ class ImageProcessor(object):
         image_x = (box[0][0] + box[2][0]) / 2
         image_y = (box[0][1] + box[2][1]) / 2
 
+        #angle_radians = math.atan2(box[0][0] - box[3][0], box[0][1] - box[3][1])
+	angle_radians = math.acos(abs(box[0][0] - box[1][0]) / math.sqrt((box[0][0] - box[1][0])**2 + (box[0][1] - box[1][1])**2))
+	print "angle in radians = ",angle_radians
+	print "angle in degrees = ",angle_radians * 180 / math.pi
+
         return Pose(
                 position = Point(
                             x = self.home_pose.position.x - (image_y - self.im_height/2) / self.pixels_per_meter + .0254*.335, #- .0254 * .375,
                             y = self.home_pose.position.y - (image_x - self.im_width/2) / self.pixels_per_meter + .0254 * 1.625,
                             z = self.table_height + GRIPPER_LENGTH),
-                orientation = Quaternion(
+                orientation = quaternion_transform.rotate(Quaternion(
                             x = 0,
                             y = math.pi/4,
                             z = 0,
-                            w = 0))
+                            w = 0), angle_radians / 2))
 
     def setAlignedPose(self, pose, color):
         c_range = COLOR_RANGES.get(color,None)
