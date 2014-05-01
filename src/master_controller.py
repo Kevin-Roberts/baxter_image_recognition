@@ -62,6 +62,15 @@ class MasterController(object):
         self.move = MoveController('right')
         self.image_processor = ImageProcessor(self.move.home_pose, camera_matrix, distortion)
         self.block_list = {'PURPLE':[], 'ORANGE':[], 'GREEN':[]}
+        if setconfig:
+            self.find_blocks()
+            for color in self.block_list:
+                if len(self.block_list[color])   == 1:
+                    self.box_pose[color] = self.block_list[color][0].pose
+                    self.box_pose[color].position.x = self.box_pose[color].position.x - 0.1
+                else:
+                    print "Baxter recognized too many blocks of color:" + color
+            
 
     def update_home_pose(self, pose):
         self.image_processor.update_home_pose(pose)
@@ -157,6 +166,9 @@ def main():
     if len(sys.argv) > 1:
         mc = MasterController(setconfig = True)
         print "Config complete"
+        for color in mc.box_pose:
+            mc.move.pick_at_pose(mc.box_pose[color])
+            print mc.box_pose[color]
         return True
     else:
         mc = MasterController()
