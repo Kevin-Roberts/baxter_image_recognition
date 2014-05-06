@@ -200,9 +200,16 @@ def main():
     if len(sys.argv) > 1:
         mc = MasterController(setconfig = True)
         print "Config complete"
+        for color in mc.box_pose:
+            mc.move.pick_at_pose(mc.box_pose[color])
+            print mc.box_pose[color]
         return True
     else:
         mc = MasterController()
+        for color in mc.box_pose:
+            mc.move.pick_at_pose(mc.box_pose[color])
+            print color
+            print mc.box_pose[color]
       
     """
     p = 0
