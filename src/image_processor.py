@@ -2,6 +2,7 @@
 
 import numpy as np
 import cv2
+import rospy
 
 import math
 import quaternion_transform
@@ -15,6 +16,8 @@ from geometry_msgs.msg import (
     Quaternion
 )
 
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
 
 # Perhaps we should stretch (and widen) the green and blue ranges up and down five
 # Then no values from 100-110 would be missing
@@ -44,6 +47,9 @@ class ImageProcessor(object):
             self.table_height = home_pose.position.z - DEFAULT_HOME_HEIGHT
         else:
             self.table_height = table_height
+        self.image_topic = "/robot/xdisplay"
+        #rospy.init_node("rsdk_xdisplay_image", anonymous=True)
+        self.bridge = CvBridge()
         self.pixels_per_meter = DEFAULT_HOME_HEIGHT / (home_pose.position.z - self.table_height) * DEFAULT_PIXELS_PER_METER
         self.camera_matrix = camera_matrix
         self.distortion = distortion
@@ -167,9 +173,10 @@ class ImageProcessor(object):
             box = cv2.cv.BoxPoints(rect)
             box = np.int0(box)
             blockList.append(Block(color, self.boxCordsToPose(box)));   
-            cv2.drawContours(self.cv_image, [box], 0, (255,0,0), 2)
+            cv2.drawContours(self.cv_image, [box], 0, (0,0,255), 4)
 
         cv2.imwrite('test' + color + '.png', self.cv_image)
+        self.displayImage(self.cv_image, "bgr8")
 
         return blockList
 
@@ -180,6 +187,11 @@ class ImageProcessor(object):
             img = self.cv_image
         cv2.imwrite(fname, img)
 
+    def displayImage(self, img, encoding):
+        resized_img = cv2.resize(img, (1024, 600), interpolation = cv2.INTER_AREA)
+        msg = self.bridge.cv_to_imgmsg(cv2.cv.fromarray(resized_img), encoding)
+        self.img_pub = rospy.Publisher("/robot/xdisplay", Image, latch=True)
+        self.img_pub.publish(msg)
 
 def inRange(img, low, high):
     if (low[0] < 0):
@@ -194,4 +206,3 @@ def inRange(img, low, high):
         return cv2.bitwise_or(res, res1)
     else:
         return cv2.inRange(img, low, high)
-
