@@ -175,8 +175,8 @@ class ImageProcessor(object):
             rect = cv2.minAreaRect(blocks[i])
             box = cv2.cv.BoxPoints(rect)
             box = np.int0(box)
-            blockList.append(Block(color, self.boxCordsToPose(box)));   
-            cv2.drawContours(self.cv_image, [box], 0, (0,0,255), 4)
+            blockList.append(Block(color, self.boxCordsToPose(box), box));   
+            cv2.drawContours(self.cv_image, [box], 0, (255,0,0), 2)
 
         cv2.imwrite('test' + color + '.png', self.cv_image)
         self.displayImage(self.cv_image, "bgr8")
