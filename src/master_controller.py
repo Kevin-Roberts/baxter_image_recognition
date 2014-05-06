@@ -66,23 +66,37 @@ class MasterController(object):
             self.move.update_table_height()
             f = open('config.txt','w')
             f.write("Table Height:")
-            f.write(self.mc.move.new_home_pose())
-            f.write("/n/n")
+            f.write(str(self.move.new_home_pose()))
+            f.write("\n")
             self.find_blocks()
             for color in self.block_list:
                 if len(self.block_list[color])   == 1:
                     f.write(color)
-                    f.write(":/n")
+                    f.write(":\n")
                     self.box_pose[color] = self.block_list[color][0].pose
                     self.box_pose[color].position.x = self.box_pose[color].position.x - 0.1
-                    f.write('"x:")
-                    f.write(self.box_pose[color].position.x)
-                    f.write('/ny:')
-                    f.write(self.box_pose[color].position.y)
-                    f.write("/n/n")
+                    f.write("x:\n")
+                    f.write(str(self.box_pose[color].position.x))
+                    f.write("\ny:\n")
+                    f.write(str(self.box_pose[color].position.y))
+                    f.write("\n")
                 else:
                     print "Baxter recognized too many blocks of color:" + color
-                f.close()
+            f.close()
+        else:
+            #Load config file
+            f = open('config.txt','r')
+            if f.readline() == "Table Height:":
+                self.move.table_height = float(f.readline())
+            for color in self.block_list:
+                f.readline()
+                if f.readline() == "x:":
+                    self.box_pose[color].position.x = float(f.readline())
+                if f.readline() == "y:":
+                    self.box_pose[color].position.y = float(f.readline())
+            f.close()
+                
+
             
 
     def update_home_pose(self, pose):
@@ -185,6 +199,11 @@ def main():
         return True
     else:
         mc = MasterController()
+        for color in mc.box_pose:
+            mc.move.pick_at_pose(mc.box_pose[color])
+            print color
+            print mc.box_pose[color]
+        return
     """
     p = 0
     f = 0
