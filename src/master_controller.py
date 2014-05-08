@@ -237,12 +237,38 @@ def main():
         print "Pass: " + str(p) + "\tFail: " + str(f)
 
     """
+    while True:
+        new_home = mc.move.new_home_pose()
+        mc.update_home_pose(new_home)
+        mc.get_blocks()
+        
+        new_home = mc.move.new_home_pose()
+        new_home.position.y += 0.2 
+        mc.update_home_pose(new_home)
+        mc.get_blocks()
 
-    mc.get_blocks()
-    new_home = mc.move.new_home_pose()
-    new_home.position.x += 0.12 
-    mc.update_home_pose(new_home)
-    mc.get_blocks()
+        new_home = mc.move.new_home_pose()
+        new_home.position.y -= 0.2
+        mc.update_home_pose(new_home)
+        mc.get_blocks()
+
+
+        new_home = mc.move.new_home_pose()
+        new_home.position.x +=0.13
+        mc.update_home_pose(new_home)
+        mc.get_blocks()
+
+        new_home = mc.move.new_home_pose()
+        new_home.position.y += 0.2 
+        new_home.position.x +=0.13
+        mc.update_home_pose(new_home)
+        mc.get_blocks()
+
+        new_home = mc.move.new_home_pose()
+        new_home.position.y -= 0.2
+        new_home.position.x +=0.13
+        mc.update_home_pose(new_home)
+        mc.get_blocks()
     #mc.find_blocks()
 
 

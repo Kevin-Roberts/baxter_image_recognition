@@ -1,2 +1,5 @@
 Thumbs.db
 image_recognition/blocks.jpg
+*.png
+*.jpg
+*.pyc
