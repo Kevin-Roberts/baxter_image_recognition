@@ -186,7 +186,8 @@ class MasterController(object):
                             num_missed +=1
                             if num_missed == miss_per_trial:
                                 break
-                        self.move.drop_at_pose(self.box_pose[color])
+                        else:
+                            self.move.drop_at_pose(self.box_pose[color])
                 if num_missed == miss_per_trial:
                     # want to break two loops when the gripper doesn't grip
                     break
