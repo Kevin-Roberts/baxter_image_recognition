@@ -64,119 +64,59 @@ class MasterController(object):
         self.block_list = {'PURPLE':[], 'ORANGE':[], 'GREEN':[]}
         if setconfig:
             self.move.update_table_height()
-
             f = open('config.txt','w')
-
-            #
-            # config file:
-            # Table Height: table_height
-            #
-            # Blackout: blackout_y_pixel
-            #
-            # Color#1: x y
-            # Color#2: x y
-            # etc for all colors
-            #
-
-            f.write("Table Height: " + str(self.move.table_height) + "\n\n")
-
+            outStr = "TABLE_HEIGHT:" + str(self.move.table_height) + "\n"
+            f.write(outStr)
             self.find_blocks()
-
-            # get the maximum y of a block for blacking out the bottom of the picture
-            miny = 0
+            blackoutval = -100 
             for color in self.block_list:
-                for blocknum in self.block_list[color]:
-                    miny = min(miny, self.block_list[color][blocknum][0])
+                maxxvalue = -100
+                for block in self.block_list[color]:
+                    if block.pose.position.x > maxxvalue:
+                        maxxvalue = block.pose.position.x
+                        self.box_pose[color] = block.pose
+                        if maxxvalue > blackoutval:
+                            blackoutval = maxxvalue
+                            blackoutblock = block
 
-            # subtract 2 from min to account for slight variations
-            f.write("Blackout: " + str(miny - 2) + "\n\n")
-
-            for color in self.block_list:
-                if len(self.block_list[color]) == 1:
-                    f.write(color + ": " + str(self.box_list[color][0].pose.position.x - 0.1) + " " + str(self.block_list[color][0].pose.position.y) + "\n")
+                if maxxvalue == -100:
+                    print "ERROR ALL THREE COLORS NOT DETECTED MISSING " + color + " BLOCK"
+                    sys.exit()
                 else:
-                    print "ERROR: Baxter recognized " + str(len(self.block_list[color])) + " blocks of color:" + color
-                    print "Expected 1"
+                    outStr = color + ":" + str(self.box_pose[color].position.x-0.8) + "," + str(self.box_pose[color].position.y) + "\n"
+                    f.write(outStr)
 
-                    f.close()
-                    sys.exit(1)
-
-            print "Configuration completed successfully. Stored in config.txt"
+            coord = blackoutblock.coord
+            self.image_processor.blackout = min(coord[0][1], coord[2][1])
+            outStr = "BLACKOUT:" + str(self.image_processor.blackout) + "\n"
+            f.write(outStr)
+            f.close()
         else:
-            #
-            # config file:
-            # Table Height: table_height
-            #
-            # Blackout: blackout_y_pixel
-            #
-            # Color#1: x y
-            # Color#2: x y
-            # etc for all colors
-            #
-
             #Load config file
             f = open('config.txt','r')
+            newLine = f.readline()
+            while newLine != "":
+                newLine = newLine.split(":")
+                if len(newLine) == 2:
+                    if newLine[0] == "TABLE_HEIGHT":
+                        self.move.table_height = float(newLine[1])
+                        self.image_processor.table_height = float(newLine[1])
+                        self.update_home_pose(self.move.home_pose)
+                    if newLine[0] == "BLACKOUT":
+                        print int(newLine[1])
+                        self.image_processor.blackout = int(newLine[1])
+                    if self.box_pose.get(newLine[0],None) != None:
+                        coords = newLine[1].split(",")
+                        if len(coords) == 2:
+                            self.box_pose[newLine[0]].position.x = float(coords[0])
+                            self.box_pose[newLine[0]].position.y = float(coords[1])
+                        else:
+                            print "INVALID CONFIG FILE SHOULD BE COLOR:X,Y" + str(newLine)
+                            sys.exit()    
+                newLine = f.readline()          
+            f.close()              
 
-            # table height line
-            line = f.readline()
-            splitline = line.split(":")
-
-            if len(splitline) != 2 or splitline[0] != "Table Height":
-                print "ERROR: config file not in expected state."
-                f.close()
-                sys.exit(1)
-
-            self.move.table_height = float(splitline[1].strip())
-
-            # read blackout
-            f.readline()
-            line = f.readline()
-            splitline = line.split(":")
-
-            if len(splitline) != 2 or splitline[0] != "Blackout":
-                print "ERROR: config file not in expected state."
-                f.close()
-                sys.exit(1)
-
-            # this doesn't seem right????
-            self.right_camera.blackout = float(splitline[1].strip())
-
-            # read the colors
-            f.readline()
-
-            while 1:
-                line = f.readline()
-
-                if not line:
-                    break
-
-                splitline = line.split(":")
-
-                if len(splitline) != 2:
-                    print "ERROR: config file not in expected state."
-                    f.close()
-                    sys.exit(1)
-
-                color = splitline[0]
-
-                if not self.block_list[color]:
-                    print "ERROR: config file contains unexpected color " + color
-                    f.close()
-                    sys.exit(1)
-
-                splitline[1] = splitline[1].strip()
-
-                # get the x and y cords for the color
-                splitline = splitline[1].split(" ")
-
-                if len(splitline) != 2:
-                    print "ERROR: config file not in expected state."
-                    f.close()
-                    sys.exit(1)
-
-                self.box_pose[color].position.x = float(splitline[0])
-                self.box_pose[color].position.y = float(splitline[1])
-
+            
 
     def update_home_pose(self, pose):
         self.image_processor.update_home_pose(pose)
@@ -276,9 +216,47 @@ def main():
         return True
     else:
         mc = MasterController()
+      
+    """
+    p = 0
+    f = 0
 
+    for i in xrange(0, 5):
+        mc.find_blocks()
+
+        if (len(mc.block_list['PURPLE']) != 4 or
+            len(mc.block_list['ORANGE']) != 4 or
+            len(mc.block_list['GREEN']) != 4):
+
+            failstring = ""
+
+            if (len(mc.block_list['PURPLE']) != 4):
+                failstring += "PURPLE FAILED\t"
+
+            if (len(mc.block_list['ORANGE']) != 4):
+                failstring += "ORANGE FAILED\t"
+
+            if (len(mc.block_list['GREEN']) != 4):
+                failstring += "GREEN FAILED\t"
+
+            cv2.imwrite("testimages/fail_" + str(f) + ".png", mc.image_processor.cv_image)
+
+            f += 1
+        else:
+            p += 1
+
+            cv2.imwrite("testimages/pass_" + str(p) + ".png", mc.image_processor.cv_image)
+
+        print "Pass: " + str(p) + "\tFail: " + str(f)
+
+    """
     while True:
         new_home = mc.move.new_home_pose()
+        mc.update_home_pose(new_home)
+        mc.get_blocks()
+ 
+        new_home = mc.move.new_home_pose()
+        new_home.position.x +=0.13
         mc.update_home_pose(new_home)
         mc.get_blocks()
 
@@ -289,12 +267,6 @@ def main():
 
         new_home = mc.move.new_home_pose()
         new_home.position.y -= 0.2
-        mc.update_home_pose(new_home)
-        mc.get_blocks()
-
-
-        new_home = mc.move.new_home_pose()
-        new_home.position.x +=0.13
         mc.update_home_pose(new_home)
         mc.get_blocks()
 

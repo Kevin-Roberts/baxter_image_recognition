@@ -127,18 +127,8 @@ class MoveController(object):
         return result
 
     def update_table_height(self):
-        tempPose = Pose(
-                 position=Point(
-                     x=0.52598,
-                     y=-0.3365,
-                     z=0.45,
-                     ),
-                 orientation=Quaternion(
-                     x=0,
-                     y=math.pi/4,
-                     z=0,
-                     w=0,),
-               )
+        tempPose = self.new_home_pose()
+                
 
         self.move_to_pose([tempPose])
         while self.getInfrared() is False:
@@ -146,7 +136,9 @@ class MoveController(object):
             self.move_to_pose([tempPose])
         
         # Get infrared sets self.table_height to the infrared distance, add drop distance
-        self.table_height += (self.home_pose.position.z - tempPose.position.z)
+
+        self.table_height = tempPose.position.z - self.table_height - 0.01 
+        #self.table_height += (self.home_pose.position.z - tempPose.position.z)
 
     def getInfrared(self):
         self.table_height = None
