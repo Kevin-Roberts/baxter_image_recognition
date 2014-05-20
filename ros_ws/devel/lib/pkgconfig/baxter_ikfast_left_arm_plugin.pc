@@ -1,0 +1,8 @@
+prefix=/home/kevin/ros_ws/devel
+
+Name: baxter_ikfast_left_arm_plugin
+Description: Description of baxter_ikfast_left_arm_plugin
+Version: 0.7.0
+Cflags: 
+Libs: -L/home/kevin/ros_ws/devel/lib 
+Requires: moveit_core pluginlib roscpp tf_conversions

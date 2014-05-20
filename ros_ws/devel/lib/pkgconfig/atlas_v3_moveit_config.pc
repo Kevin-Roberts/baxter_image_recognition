@@ -1,0 +1,8 @@
+prefix=/home/kevin/ros_ws/devel
+
+Name: atlas_v3_moveit_config
+Description: Description of atlas_v3_moveit_config
+Version: 0.2.0
+Cflags: 
+Libs: -L/home/kevin/ros_ws/devel/lib 
+Requires: 

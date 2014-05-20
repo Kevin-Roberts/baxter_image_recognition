@@ -1,0 +1,7 @@
+set(_CATKIN_CURRENT_PACKAGE "baxter_ikfast_right_arm_plugin")
+set(baxter_ikfast_right_arm_plugin_MAINTAINER "Rethink Robotics Inc. <rsdk.support@rethinkrobotics.com>")
+set(baxter_ikfast_right_arm_plugin_DEPRECATED "")
+set(baxter_ikfast_right_arm_plugin_VERSION "0.7.0")
+set(baxter_ikfast_right_arm_plugin_BUILD_DEPENDS "moveit_core" "pluginlib" "roscpp" "tf_conversions")
+set(baxter_ikfast_right_arm_plugin_RUN_DEPENDS "moveit_core" "pluginlib" "roscpp" "tf_conversions")
+set(baxter_ikfast_right_arm_plugin_BUILDTOOL_DEPENDS "catkin")

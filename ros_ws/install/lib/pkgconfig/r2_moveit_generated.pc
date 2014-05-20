@@ -1,0 +1,8 @@
+prefix=/home/kevin/ros_ws/install
+
+Name: r2_moveit_generated
+Description: Description of r2_moveit_generated
+Version: 0.1.0
+Cflags: 
+Libs: -L/home/kevin/ros_ws/install/lib 
+Requires: 

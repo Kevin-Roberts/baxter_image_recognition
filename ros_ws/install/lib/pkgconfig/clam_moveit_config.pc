@@ -1,0 +1,8 @@
+prefix=/home/kevin/ros_ws/install
+
+Name: clam_moveit_config
+Description: Description of clam_moveit_config
+Version: 0.1.0
+Cflags: 
+Libs: -L/home/kevin/ros_ws/install/lib 
+Requires: 

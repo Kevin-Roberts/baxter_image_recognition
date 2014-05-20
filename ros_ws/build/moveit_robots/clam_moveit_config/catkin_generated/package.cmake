@@ -1,0 +1,7 @@
+set(_CATKIN_CURRENT_PACKAGE "clam_moveit_config")
+set(clam_moveit_config_MAINTAINER "MoveIt Setup Assistant <assistant@moveit.ros.org>")
+set(clam_moveit_config_DEPRECATED "")
+set(clam_moveit_config_VERSION "0.1.0")
+set(clam_moveit_config_BUILD_DEPENDS )
+set(clam_moveit_config_RUN_DEPENDS "moveit_ros_move_group")
+set(clam_moveit_config_BUILDTOOL_DEPENDS "catkin")
