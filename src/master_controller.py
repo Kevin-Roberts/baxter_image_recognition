@@ -83,7 +83,7 @@ class MasterController(object):
                     print "ERROR ALL THREE COLORS NOT DETECTED MISSING " + color + " BLOCK"
                     sys.exit()
                 else:
-                    outStr = color + ":" + str(self.box_pose[color].position.x-0.8) + "," + str(self.box_pose[color].position.y) + "\n"
+                    outStr = color + ":" + str(self.box_pose[color].position.x-0.08) + "," + str(self.box_pose[color].position.y) + "\n"
                     f.write(outStr)
 
             coord = blackoutblock.coord
