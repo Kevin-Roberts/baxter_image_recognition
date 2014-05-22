@@ -142,21 +142,6 @@ class MasterController(object):
         self.block_list['GREEN'] = self.image_processor.findBlock("GREEN")
         #print "Found " + str(len(self.block_list['GREEN'])) + " green blocks"
 
-    def position_above_pose(self, pose):
-        z_offset = .02
-        pose.position.z += z_offset
-        self.move.move_to_pose(pose)
-        pose.position.z -= z_offset
-
-    def align_pose(self, pose, color):
-        self.image_processor.setImage(self.right_camera.getImage())
-        self.image_processor.setAlignedPose(pose, color)
-
-    def sort_blocklist(self):
-        #Could choose the order they are grabbed in? Look through each block list
-        return 0
-
-
     def are_blocks_near(self, block):
         xthresh = 0
         ythresh = .074 #~3 inches
