@@ -91,30 +91,35 @@ class MasterController(object):
             outStr = "BLACKOUT:" + str(self.image_processor.blackout) + "\n"
             f.write(outStr)
             f.close()
+
         else:
             #Load config file
-            f = open('config.txt','r')
-            newLine = f.readline()
-            while newLine != "":
-                newLine = newLine.split(":")
-                if len(newLine) == 2:
-                    if newLine[0] == "TABLE_HEIGHT":
-                        self.move.table_height = float(newLine[1])
-                        self.image_processor.table_height = float(newLine[1])
-                        self.update_home_pose(self.move.home_pose)
-                    if newLine[0] == "BLACKOUT":
-                        print int(newLine[1])
-                        self.image_processor.blackout = int(newLine[1])
-                    if self.box_pose.get(newLine[0],None) != None:
-                        coords = newLine[1].split(",")
-                        if len(coords) == 2:
-                            self.box_pose[newLine[0]].position.x = float(coords[0])
-                            self.box_pose[newLine[0]].position.y = float(coords[1])
-                        else:
-                            print "INVALID CONFIG FILE SHOULD BE COLOR:X,Y" + str(newLine)
-                            sys.exit()    
-                newLine = f.readline()          
-            f.close()              
+            try:
+                f = open('config.txt','r')
+                newLine = f.readline()
+                while newLine != "":
+                    newLine = newLine.split(":")
+                    if len(newLine) == 2:
+                        if newLine[0] == "TABLE_HEIGHT":
+                            self.move.table_height = float(newLine[1])
+                            self.image_processor.table_height = float(newLine[1])
+                            self.update_home_pose(self.move.home_pose)
+                        if newLine[0] == "BLACKOUT":
+                            print int(newLine[1])
+                            self.image_processor.blackout = int(newLine[1])
+                        if self.box_pose.get(newLine[0],None) != None:
+                            coords = newLine[1].split(",")
+                            if len(coords) == 2:
+                                self.box_pose[newLine[0]].position.x = float(coords[0])
+                                self.box_pose[newLine[0]].position.y = float(coords[1])
+                            else:
+                                print "INVALID CONFIG FILE SHOULD BE COLOR:X,Y" + str(newLine)
+                                sys.exit()    
+                    newLine = f.readline()          
+                f.close()  
+            except:
+                print "MISSING config.txt PLEASE RUN WITH -c FLAG"
+                print "PROCEEDING WITH DEFAULT TABLE HEIGHT AND NO IMAGE BLACKOUT VALUE"            
 
             
 
