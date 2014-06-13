@@ -1,6 +1,8 @@
 Image Recognition
 =================
 
+NOTE: NOTHING IN THIS FOLDER IS ACTUALLY USED FOR IMAGE RECOGNITION, SOME OF THE CODE IS SIMILIAR BUT ALL OF THE CODE IS NOW LOCATED IN THE src FOLDER
+
 I threw this example together. Essentially I am isolating one square and then drawing that squares boundaries. The program gets the coordinates of the squares and would know which color the object is based on which color is masked for.
 
 I believe this snippet of code could easily be expanded and used as our block detection function.
