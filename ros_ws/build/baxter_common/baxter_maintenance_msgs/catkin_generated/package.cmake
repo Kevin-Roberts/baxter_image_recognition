@@ -1,7 +1,0 @@
-set(_CATKIN_CURRENT_PACKAGE "baxter_maintenance_msgs")
-set(baxter_maintenance_msgs_MAINTAINER "Rethink Robotics Inc. <rsdk.support@rethinkrobotics.com>")
-set(baxter_maintenance_msgs_DEPRECATED "")
-set(baxter_maintenance_msgs_VERSION "0.7.0")
-set(baxter_maintenance_msgs_BUILD_DEPENDS "message_generation" "std_msgs")
-set(baxter_maintenance_msgs_RUN_DEPENDS "message_runtime" "std_msgs")
-set(baxter_maintenance_msgs_BUILDTOOL_DEPENDS "catkin")

@@ -1,7 +1,0 @@
-set(_CATKIN_CURRENT_PACKAGE "baxter_moveit_config")
-set(baxter_moveit_config_MAINTAINER "MoveIt Setup Assistant <assistant@moveit.ros.org>")
-set(baxter_moveit_config_DEPRECATED "")
-set(baxter_moveit_config_VERSION "0.7.0")
-set(baxter_moveit_config_BUILD_DEPENDS "baxter_description")
-set(baxter_moveit_config_RUN_DEPENDS "moveit_ros_move_group" "baxter_description" "moveit_simple_controller_manager")
-set(baxter_moveit_config_BUILDTOOL_DEPENDS "catkin")

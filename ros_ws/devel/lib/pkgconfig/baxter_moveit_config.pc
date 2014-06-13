@@ -1,8 +1,0 @@
-prefix=/home/kevin/ros_ws/devel
-
-Name: baxter_moveit_config
-Description: Description of baxter_moveit_config
-Version: 0.7.0
-Cflags: 
-Libs: -L/home/kevin/ros_ws/devel/lib 
-Requires: 

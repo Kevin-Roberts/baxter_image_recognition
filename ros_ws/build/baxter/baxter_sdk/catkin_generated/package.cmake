@@ -1,7 +1,0 @@
-set(_CATKIN_CURRENT_PACKAGE "baxter_sdk")
-set(baxter_sdk_MAINTAINER "Rethink Robotics Inc. <rsdk.support@rethinkrobotics.com>")
-set(baxter_sdk_DEPRECATED "")
-set(baxter_sdk_VERSION "0.7.0")
-set(baxter_sdk_BUILD_DEPENDS )
-set(baxter_sdk_RUN_DEPENDS "baxter_interface" "baxter_examples" "baxter_tools" "baxter_common")
-set(baxter_sdk_BUILDTOOL_DEPENDS "catkin")

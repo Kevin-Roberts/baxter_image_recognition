@@ -1,8 +1,0 @@
-prefix=/home/kevin/ros_ws/install
-
-Name: baxter_description
-Description: Description of baxter_description
-Version: 0.7.0
-Cflags: 
-Libs: -L/home/kevin/ros_ws/install/lib 
-Requires: 

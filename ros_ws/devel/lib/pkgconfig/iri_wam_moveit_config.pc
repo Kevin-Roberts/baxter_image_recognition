@@ -1,8 +1,0 @@
-prefix=/home/kevin/ros_ws/devel
-
-Name: iri_wam_moveit_config
-Description: Description of iri_wam_moveit_config
-Version: 0.2.0
-Cflags: 
-Libs: -L/home/kevin/ros_ws/devel/lib 
-Requires: 
