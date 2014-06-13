@@ -62,6 +62,7 @@ class MasterController(object):
         self.move = MoveController('right')
         self.image_processor = ImageProcessor(self.move.home_pose, camera_matrix, distortion)
         self.block_list = {'PURPLE':[], 'ORANGE':[], 'GREEN':[]}
+        # This is all for loading / calculating /saving the configuration information i.e. box location and table height
         if setconfig:
             self.move.update_table_height()
             f = open('config.txt','w')

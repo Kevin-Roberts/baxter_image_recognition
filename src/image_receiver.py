@@ -93,7 +93,7 @@ def main():
     ir.enableCamera()
     image = ir.getImage()
     ip.setImage(image)
-    ip.findBlock("BLUE")
+    ip.findBlock("PURPLE")
     # cv.DestroyAllWindows()
 
 

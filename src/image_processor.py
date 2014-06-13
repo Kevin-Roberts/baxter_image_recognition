@@ -97,10 +97,7 @@ class ImageProcessor(object):
         image_y = (box[0][1] + box[2][1]) / 2
 
         #angle_radians = math.atan2(box[0][0] - box[3][0], box[0][1] - box[3][1])
-	angle_radians = math.acos(abs(box[0][0] - box[1][0]) / math.sqrt((box[0][0] - box[1][0])**2 + (box[0][1] - box[1][1])**2))
-	print "angle in radians = ",angle_radians
-	print "angle in degrees = ",angle_radians * 180 / math.pi
-
+        angle_radians = math.acos(abs(box[0][0] - box[1][0]) / math.sqrt((box[0][0] - box[1][0])**2 + (box[0][1] - box[1][1])**2))
         return Pose(
                 position = Point(
                             x = self.home_pose.position.x - (image_y - self.im_height/2) / self.pixels_per_meter + .0254*.335, #- .0254 * .375,
@@ -112,42 +109,42 @@ class ImageProcessor(object):
                             z = 0,
                             w = 0), angle_radians / 2))
 
-    def setAlignedPose(self, pose, color):
-        c_range = COLOR_RANGES.get(color,None)
+    # def setAlignedPose(self, pose, color):
+    #     c_range = COLOR_RANGES.get(color,None)
 
-        if c_range is None:
-            print "Invalied Color"
-            return None
+    #     if c_range is None:
+    #         print "Invalied Color"
+    #         return None
 
-        mask = inRange(self.hsv_image, c_range[0], c_range[1])
-        contours, heirarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    #     mask = self.inRange(self.hsv_image, c_range[0], c_range[1])
+    #     contours, heirarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
-        blocks = []
-        for contour in contours:
-            area = cv2.contourArea(contour)
-            if area > 100:
-                blocks.append(contour)
+    #     blocks = []
+    #     for contour in contours:
+    #         area = cv2.contourArea(contour)
+    #         if area > 100:
+    #             blocks.append(contour)
 
-        min_offset_dist = 10000
-        min_x_offset = 100
-        min_y_offset = 100
-        for i in range(0, len(blocks)):
-            rect = cv2.minAreaRect(blocks[i])
-            box = cv2.cv.BoxPoints(rect)
-            box = np.int0(box)
-            cv2.drawContours(self.cv_image, [box], 0, (255,0,0), 2)
-            x_offset = ((box[0][0] + box[2][0]) / 2) - self.im_height / 2
-            y_offset = ((box[0][1] + box[2][1]) / 2) - self.im_width / 2
-            offset_dist = math.sqrt(x_offset**2 + y_offset**2)
-            if offset_dist < min_offset_dist:
-                min_offset_dist = offset_dist
-                min_x_offset = x_offset
-                min_y_offset = y_offset
+    #     min_offset_dist = 10000
+    #     min_x_offset = 100
+    #     min_y_offset = 100
+    #     for i in range(0, len(blocks)):
+    #         rect = cv2.minAreaRect(blocks[i])
+    #         box = cv2.cv.BoxPoints(rect)
+    #         box = np.int0(box)
+    #         cv2.drawContours(self.cv_image, [box], 0, (255,0,0), 2)
+    #         x_offset = ((box[0][0] + box[2][0]) / 2) - self.im_height / 2
+    #         y_offset = ((box[0][1] + box[2][1]) / 2) - self.im_width / 2
+    #         offset_dist = math.sqrt(x_offset**2 + y_offset**2)
+    #         if offset_dist < min_offset_dist:
+    #             min_offset_dist = offset_dist
+    #             min_x_offset = x_offset
+    #             min_y_offset = y_offset
 
-        self.writeImage()
+    #     self.writeImage()
 
-        pose.position.x -= min_x_offset / PIXELS_PER_METER_CLOSE - .0254 * 1.0
-        pose.position.y -= min_y_offset / PIXELS_PER_METER_CLOSE - .0254 * 1.25
+    #     pose.position.x -= min_x_offset / PIXELS_PER_METER_CLOSE - .0254 * 1.0
+    #     pose.position.y -= min_y_offset / PIXELS_PER_METER_CLOSE - .0254 * 1.25
 
     def findBlock(self, color):
         #if pic_pose is None:
@@ -159,7 +156,7 @@ class ImageProcessor(object):
             print "Invalid Color"
             return None
         # Extract new range of color
-        mask = inRange(self.hsv_image, c_range[0], c_range[1])
+        mask = self.inRange(self.hsv_image, c_range[0], c_range[1])
         # Find color boundaries
         contours, hierarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
         # Only save large area shapes, ignore small specs of color matching
@@ -197,16 +194,16 @@ class ImageProcessor(object):
         self.img_pub = rospy.Publisher("/robot/xdisplay", Image, latch=True)
         self.img_pub.publish(msg)
 
-def inRange(img, low, high):
-    if (low[0] < 0):
-        low1 = np.array([180 + low[0], low[1], low[2]])
-        high1 = np.array([179, high[1], high[2]])
+    def inRange(self, img, low, high):
+        if (low[0] < 0):
+            low1 = np.array([180 + low[0], low[1], low[2]])
+            high1 = np.array([179, high[1], high[2]])
 
-        low[0] = 0
+            low[0] = 0
 
-        res = cv2.inRange(img, low, high)
-        res1 = cv2.inRange(img, low1, high1)
+            res = cv2.inRange(img, low, high)
+            res1 = cv2.inRange(img, low1, high1)
 
-        return cv2.bitwise_or(res, res1)
-    else:
-        return cv2.inRange(img, low, high)
+            return cv2.bitwise_or(res, res1)
+        else:
+            return cv2.inRange(img, low, high)

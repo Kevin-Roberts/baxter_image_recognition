@@ -154,16 +154,16 @@ class MoveController(object):
             self.table_height = False
         self.infrared_sub.unregister()
 
-    def checkPoseRanges(self, pose):
-        # this will check to make sure you don't give a position value that is too far in one direction.
-        # result = self.checkNearTable()
-        return 0
+    # def checkPoseRanges(self, pose):
+    #     # this will check to make sure you don't give a position value that is too far in one direction.
+    #     # result = self.checkNearTable()
+    #     return 0
 
-    def check_near_table(self):
-        if(self.arm.endpoint_pose().position.z < self.table_height + 0.14):
-            return True
-        else:
-            return False
+    # def check_near_table(self):
+    #     if(self.arm.endpoint_pose().position.z < self.table_height + 0.14):
+    #         return True
+    #     else:
+    #         return False
 
     def new_home_pose(self):
         return Pose(
