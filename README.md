@@ -7,6 +7,8 @@ Wiki
 ====
 The Wiki for this project can be found here (https://github.com/Kevin-Roberts/baxter_image_recognition/wiki). This wiki contains information about the specifications, tasks, timeline, and eventually examples for this project.
 
+The Wiki contains some useful information but also checkout the ClassDocumentation word file in the repository to see all of the setup steps and documentation for all of the functions in this project.
+
 Contributors 
 ============
 Kevin Roberts - robe0815@umn.edu
