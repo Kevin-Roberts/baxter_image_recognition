@@ -9,7 +9,7 @@ The Wiki for this project can be found here (https://github.com/Kevin-Roberts/ba
 
 The Wiki contains some useful information but also checkout the ClassDocumentation word file in the repository to see all of the setup steps and documentation for all of the functions in this project.
 
-In order to run the baxter_image_recognition libary simply install all of Baxter's libaries (look at Rethink Robotics wiki for more information https://github.com/RethinkRobotics/sdk-docs/wiki) and run master_controller.py. If you are interested in using baxter_image_recognition's libaries as interfaces to your own project I suggest you look into move_controller.py and image_receiver.py. master_controller.py puts the whole project together and image_processor.py handles the image processing to detect blocks based on there color and translates the image coordinates to "Pose" objects used to tell baxters limbs where to move to (with move_controller.py). 
+In order to run the baxter_image_recognition libary simply install all of Baxter's libaries (look at Rethink Robotics wiki for more information https://github.com/RethinkRobotics/sdk-docs/wiki), read the ClassDocumentatin.docx file and run master_controller.py. If you are interested in using baxter_image_recognition's libaries as interfaces to your own project I suggest you look into move_controller.py and image_receiver.py. master_controller.py puts the whole project together and image_processor.py handles the image processing to detect blocks based on there color and translates the image coordinates to "Pose" objects used to tell baxters limbs where to move to (with move_controller.py). 
 
 Contributors 
 ============
